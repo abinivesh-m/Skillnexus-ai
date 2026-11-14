@@ -8,7 +8,7 @@ from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pathlib import Path
 
 from domain import (
@@ -46,40 +46,40 @@ app = FastAPI(
 # Request & Response Schemas
 # ---------------------------------------------------------------------------
 class OrchestrateRequest(BaseModel):
-    learner_id: str
-    target_role_id: Optional[str] = None
+    learner_id: str = Field(min_length=1, max_length=80)
+    target_role_id: Optional[str] = Field(default=None, min_length=1, max_length=80)
 
 class GradeAssessmentRequest(BaseModel):
-    learner_id: str
-    skill: str
-    answers: List[int]
-    current_modules: List[Dict[str, Any]]
-    target_role_id: str
-    level: int = 3
-    concept_question: Optional[str] = None
-    concept_answer: Optional[str] = None
+    learner_id: str = Field(min_length=1, max_length=80)
+    skill: str = Field(min_length=1, max_length=120)
+    answers: List[int] = Field(min_length=1, max_length=20)
+    current_modules: List[Dict[str, Any]] = Field(max_length=100)
+    target_role_id: str = Field(min_length=1, max_length=80)
+    level: int = Field(default=3, ge=0, le=5)
+    concept_question: Optional[str] = Field(default=None, max_length=1000)
+    concept_answer: Optional[str] = Field(default=None, max_length=5000)
 
 class GoalSwitchRequest(BaseModel):
-    learner_id: str
-    new_role_id: str
-    current_skills: Optional[List[Dict[str, Any]]] = None
+    learner_id: str = Field(min_length=1, max_length=80)
+    new_role_id: str = Field(min_length=1, max_length=80)
+    current_skills: Optional[List[Dict[str, Any]]] = Field(default=None, max_length=100)
 
 class ConceptRequest(BaseModel):
-    skill: str
-    question: str
-    answer: str
-    claimed: int = 3
-    required: int = 4
+    skill: str = Field(min_length=1, max_length=120)
+    question: str = Field(min_length=1, max_length=2000)
+    answer: str = Field(min_length=1, max_length=5000)
+    claimed: int = Field(default=3, ge=0, le=5)
+    required: int = Field(default=4, ge=0, le=5)
 
 class MentorRequest(BaseModel):
-    skill: str
-    score: int
-    module: str
-    hours: int
-    before: float = 0
-    after: float = 0
-    weeks_before: int = 0
-    weeks_after: int = 0
+    skill: str = Field(min_length=1, max_length=120)
+    score: int = Field(ge=0, le=100)
+    module: str = Field(min_length=1, max_length=500)
+    hours: int = Field(ge=0, le=10000)
+    before: float = Field(default=0, ge=0)
+    after: float = Field(default=0, ge=0)
+    weeks_before: int = Field(default=0, ge=0, le=1000)
+    weeks_after: int = Field(default=0, ge=0, le=1000)
 
 # ---------------------------------------------------------------------------
 # Question resolution: curated bank -> Gemini-generated -> honest general probe
@@ -118,7 +118,7 @@ def health_check():
 
 @app.get("/api/roles")
 def get_roles():
-    return {"roles": [r.dict() for r in load_roles()]}
+    return {"roles": [r.model_dump() for r in load_roles()]}
 
 @app.get("/api/learners")
 def get_learners():
@@ -166,10 +166,10 @@ def orchestrate_pipeline(req: OrchestrateRequest):
 
     return {
         "learner": learner,
-        "target_role": role.dict(),
+        "target_role": role.model_dump(),
         "profile_audit": profile_data["audit_summary"],
-        "metrics": metrics.dict(),
-        "gaps": [g.dict() for g in gaps],
+        "metrics": metrics.model_dump(),
+        "gaps": [g.model_dump() for g in gaps],
         "roadmap": modules_with_res,
         "agent_logs": logs,
         "plan": {
@@ -319,7 +319,7 @@ def grade_assessment(req: GradeAssessmentRequest):
             "concept_grade": concept_grade,
             "adaptive_replan": False,
             "diff_summary": diff_summary,
-            "new_metrics": new_metrics.dict(),
+            "new_metrics": new_metrics.model_dump(),
             "updated_roadmap": updated_modules,
             "plan": {"total_hours": hours_after, "hours_per_week": HOURS_PER_WEEK, "weeks": weeks_after},
             "agent_logs": logs
@@ -344,9 +344,9 @@ def switch_goal(req: GoalSwitchRequest):
     metrics, gaps, modules, diff_summary, logs = mentor.adaptive_replan_on_goal_change(new_role, skills)
 
     return {
-        "new_role": new_role.dict(),
-        "metrics": metrics.dict(),
-        "gaps": [g.dict() for g in gaps],
+        "new_role": new_role.model_dump(),
+        "metrics": metrics.model_dump(),
+        "gaps": [g.model_dump() for g in gaps],
         "roadmap": modules,
         "diff_summary": diff_summary,
         "agent_logs": [l.to_dict() for l in logs]
@@ -375,7 +375,7 @@ def ai_grade_concept(req: ConceptRequest):
 
 @app.post("/api/ai/mentor")
 def ai_mentor(req: MentorRequest):
-    text, source = ai.mentor_narrative(req.dict())
+    text, source = ai.mentor_narrative(req.model_dump())
     return {"narrative": text, "source": source}
 
 # ---------------------------------------------------------------------------

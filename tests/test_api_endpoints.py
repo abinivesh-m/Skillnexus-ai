@@ -58,6 +58,10 @@ def test_assessment_and_adaptive_failure_replan(client, monkeypatch):
     questions = assessment.json()["questions"]
     assert len(questions) == 3
 
+    # Choose an index different from each curated answer so this is a real
+    # failure-path contract test rather than an accidental pass.
+    wrong_answers = [(question["correct_index"] + 1) % len(question["options"]) for question in questions]
+
     # Keep this contract test offline and deterministic.
     monkeypatch.setattr(main.ai, "mentor_narrative", lambda payload: ("Deterministic test narrative.", "test"))
     plan = client.post(
@@ -69,7 +73,7 @@ def test_assessment_and_adaptive_failure_replan(client, monkeypatch):
         json={
             "learner_id": "aarav-patel",
             "skill": "JavaScript",
-            "answers": [1, 1, 1],
+            "answers": wrong_answers,
             "current_modules": plan["roadmap"],
             "target_role_id": "full-stack-dev",
             "level": 4,
