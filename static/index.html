@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+  <a href="#mainContent" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:99999;" onfocus="this.style.left='16px';this.style.top='16px';this.style.width='auto';this.style.height='auto';this.style.padding='8px 16px';this.style.background='#000';this.style.color='#00f0ff';this.style.border='1px solid #00f0ff';this.style.borderRadius='4px';">Skip to main content</a>
 
   <canvas id="bg3DCanvas" aria-hidden="true"></canvas>
   <div class="vignette" aria-hidden="true"></div>
@@ -20,10 +21,10 @@
     <span class="tour-detail" id="tourDetail">Every node is a benchmark skill. Drag to rotate or click to diagnose.</span>
   </div>
 
-  <header class="topbar">
+  <header class="topbar" role="banner">
     <div class="shell topbar-inner">
       <div class="brand">
-        <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
           <path d="M12 2.5 3.5 7v10L12 21.5 20.5 17V7L12 2.5Z"/>
           <circle cx="12" cy="12" r="2.6"/>
           <path d="M12 2.5v6.9M12 14.6v6.9M3.5 7l6 3.4M14.5 13.6l6 3.4M20.5 7l-6 3.4M9.5 13.6l-6 3.4" opacity=".45"/>
@@ -34,19 +35,20 @@
       </div>
 
       <div class="topbar-actions">
-        <span class="ai-pill" id="aiStatusPill" title="Model status">
+        <span class="ai-pill" id="aiStatusPill" title="Model status" role="status">
           <span class="dot dot-idle" id="aiDot"></span>
           <span id="aiStatusText">checking model</span>
         </span>
-        <button class="btn btn-quiet hide-sm" id="btnAutoTour" onclick="play10SecondTour()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <button class="btn btn-quiet hide-sm" id="btnAutoTour" onclick="play10SecondTour()" aria-label="Run 10 second interactive tour demo">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
           Run 10s demo
         </button>
-        <button class="btn btn-solid" onclick="openAssessmentModal('JavaScript')">Start check-in</button>
+        <button class="btn btn-solid" onclick="openAssessmentModal('JavaScript')" aria-label="Start diagnostic skill check-in">Start check-in</button>
       </div>
     </div>
   </header>
 
+  <main id="mainContent" role="main">
   <div class="shell">
 
     <!-- ── Stage ─────────────────────────────────────────────────────────── -->
@@ -362,6 +364,7 @@
       </div>
     </footer>
   </div>
+  </main>
 
   <!-- ── Check-in modal ──────────────────────────────────────────────────── -->
   <div class="modal" id="assessmentModal" role="dialog" aria-modal="true">

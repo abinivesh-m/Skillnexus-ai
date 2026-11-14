@@ -106,3 +106,22 @@ def test_invalid_ids_are_rejected(client):
         json={"learner_id": "not-a-real-learner", "target_role_id": "full-stack-dev"},
     )
     assert response.status_code == 404
+
+
+def test_security_headers_present(client):
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    assert response.headers.get("x-content-type-options") == "nosniff"
+    assert response.headers.get("x-frame-options") == "DENY"
+    assert "strict-transport-security" in response.headers
+
+
+def test_ai_status_and_audit_contracts(client):
+    status_resp = client.get("/api/ai/status")
+    assert status_resp.status_code == 200
+    assert "enabled" in status_resp.json()
+
+    audit_resp = client.get("/api/ai/audit")
+    assert audit_resp.status_code == 200
+    assert "calls" in audit_resp.json()
+

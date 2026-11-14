@@ -4,10 +4,11 @@ FastAPI Application Backend
 """
 
 import os
-from typing import List, Dict, Any, Optional
-from fastapi import FastAPI, HTTPException
+from typing import List, Dict, Any, Optional, Tuple
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel, Field
 from pathlib import Path
 
@@ -41,6 +42,24 @@ app = FastAPI(
     description="Autonomous Multi-Agent Career & Skill Orchestration Platform with Deterministic Gap Analytics",
     version="1.0.0"
 )
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """
+    Enterprise security headers middleware:
+    Guarantees X-Content-Type-Options, X-Frame-Options, X-XSS-Protection,
+    Strict-Transport-Security, and Referrer-Policy on all responses.
+    """
+    async def dispatch(self, request: Request, call_next) -> Response:
+        response: Response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 # ---------------------------------------------------------------------------
 # Request & Response Schemas
@@ -99,8 +118,12 @@ def resolve_questions(skill: str, level: int = 3):
 # ---------------------------------------------------------------------------
 # API Endpoints
 # ---------------------------------------------------------------------------
-@app.get("/api/health")
-def health_check():
+@app.get("/api/health", response_model=Dict[str, Any])
+def health_check() -> Dict[str, Any]:
+    """
+    Returns system health status, multi-agent swarm operational state,
+    and Gemini context adapter availability.
+    """
     return {
         "status": "operational",
         "system": "SkillNexus-AI Multi-Agent Swarm",
@@ -116,16 +139,18 @@ def health_check():
         "ai": ai.status(),
     }
 
-@app.get("/api/roles")
-def get_roles():
+@app.get("/api/roles", response_model=Dict[str, Any])
+def get_roles() -> Dict[str, Any]:
+    """Retrieves all benchmark role requirement ontologies."""
     return {"roles": [r.model_dump() for r in load_roles()]}
 
-@app.get("/api/learners")
-def get_learners():
+@app.get("/api/learners", response_model=Dict[str, Any])
+def get_learners() -> Dict[str, Any]:
+    """Retrieves pre-seeded candidate learner profiles."""
     return {"learners": load_learners()}
 
-@app.post("/api/orchestrate")
-def orchestrate_pipeline(req: OrchestrateRequest):
+@app.post("/api/orchestrate", response_model=Dict[str, Any])
+def orchestrate_pipeline(req: OrchestrateRequest) -> Dict[str, Any]:
     """
     Executes the multi-agent pipeline in sequence:
     ProfileAgent -> GapAgent -> CurriculumAgent -> ResourceAgent
@@ -179,8 +204,8 @@ def orchestrate_pipeline(req: OrchestrateRequest):
         },
     }
 
-@app.get("/api/assessment/{skill}")
-def get_assessment(skill: str, level: int = 3):
+@app.get("/api/assessment/{skill}", response_model=Dict[str, Any])
+def get_assessment(skill: str, level: int = 3) -> Dict[str, Any]:
     """
     Question resolution order:
       1. Curated expert bank (JavaScript, React)
@@ -196,8 +221,8 @@ def get_assessment(skill: str, level: int = 3):
         "questions": questions,
     }
 
-@app.post("/api/assessment/grade")
-def grade_assessment(req: GradeAssessmentRequest):
+@app.post("/api/assessment/grade", response_model=Dict[str, Any])
+def grade_assessment(req: GradeAssessmentRequest) -> Dict[str, Any]:
     """
     Grades assessment, updates verified skill status, and triggers
     Adaptive Re-plan via MentorAgent if the learner struggles!
@@ -325,8 +350,8 @@ def grade_assessment(req: GradeAssessmentRequest):
             "agent_logs": logs
         }
 
-@app.post("/api/switch-goal")
-def switch_goal(req: GoalSwitchRequest):
+@app.post("/api/switch-goal", response_model=Dict[str, Any])
+def switch_goal(req: GoalSwitchRequest) -> Dict[str, Any]:
     """
     Triggers dynamic career re-routing across all 6 agents
     """
@@ -355,16 +380,16 @@ def switch_goal(req: GoalSwitchRequest):
 # ---------------------------------------------------------------------------
 # Gemini layer: status, audit trail, rubric grading, mentor narrative
 # ---------------------------------------------------------------------------
-@app.get("/api/ai/status")
-def ai_status():
+@app.get("/api/ai/status", response_model=Dict[str, Any])
+def ai_status() -> Dict[str, Any]:
     return ai.status()
 
-@app.get("/api/ai/audit")
-def ai_audit():
+@app.get("/api/ai/audit", response_model=Dict[str, Any])
+def ai_audit() -> Dict[str, Any]:
     return {"calls": ai.audit_log()}
 
-@app.post("/api/ai/grade-concept")
-def ai_grade_concept(req: ConceptRequest):
+@app.post("/api/ai/grade-concept", response_model=Dict[str, Any])
+def ai_grade_concept(req: ConceptRequest) -> Dict[str, Any]:
     return ai.grade_concept(
         skill=req.skill,
         question=req.question,
@@ -373,8 +398,8 @@ def ai_grade_concept(req: ConceptRequest):
         required=req.required,
     )
 
-@app.post("/api/ai/mentor")
-def ai_mentor(req: MentorRequest):
+@app.post("/api/ai/mentor", response_model=Dict[str, Any])
+def ai_mentor(req: MentorRequest) -> Dict[str, Any]:
     text, source = ai.mentor_narrative(req.model_dump())
     return {"narrative": text, "source": source}
 
@@ -387,7 +412,7 @@ if not STATIC_DIR.exists():
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 @app.get("/")
-def serve_index():
+def serve_index() -> Any:
     index_file = STATIC_DIR / "index.html"
     if index_file.exists():
         return FileResponse(index_file)
