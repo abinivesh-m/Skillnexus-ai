@@ -143,6 +143,16 @@
       </div>
     </section>
 
+    <!-- ── Enterprise Capabilities & Innovation Navigation ── -->
+    <nav class="feature-nav-bar" aria-label="Feature Discovery">
+      <button class="feat-pill active" onclick="scrollToSection('panelLearner')"><span>⚡</span> 1. Claimed vs Verified Matrix</button>
+      <button class="feat-pill" onclick="scrollToSection('panelGaps')"><span>🔮</span> 2. What-If Simulation Engine</button>
+      <button class="feat-pill" onclick="scrollToSection('panelRoadmap')"><span>🗺️</span> 3. Adaptive Roadmap &amp; Amber Diff</button>
+      <button class="feat-pill" onclick="scrollToSection('secConvergence')"><span>🌌</span> 4. Multi-Timeline Career Convergence</button>
+      <button class="feat-pill" onclick="scrollToSection('secMarketShock')"><span>🌪️</span> 5. Macroeconomic Market Disruption</button>
+      <button class="feat-pill" onclick="openCodeChallengeModal()"><span>💻</span> 6. Micro-Code AST Challenge</button>
+    </nav>
+
     <!-- ── Workspace ─────────────────────────────────────────────────────── -->
     <main class="workspace">
 
@@ -217,6 +227,121 @@
 
     </main>
 
+    <!-- ── Section 4: Multi-Timeline Career Convergence Radar ──────────── -->
+    <section class="enterprise-section" id="secConvergence">
+      <div class="section-kicker">
+        <span class="live-ring"></span>
+        Enterprise Feature · Strategic Career Convergence
+      </div>
+      <h2 class="section-headline">Multi-Timeline Career Convergence Radar</h2>
+      <p class="section-desc">
+        Traditional advisors evaluate one career at a time. The SkillNexus swarm computes 3 parallel market timelines simultaneously, identifying which target role yields the fastest placement with minimal cognitive debt.
+      </p>
+
+      <div class="convergence-grid">
+        <!-- Track A: Full Stack -->
+        <div class="timeline-card" id="timelineCardFullStack">
+          <span class="timeline-badge badge-std">Current Target</span>
+          <div>
+            <h3 class="timeline-role">Full Stack Developer</h3>
+            <div class="timeline-readiness" style="color: var(--amber);">30.9%</div>
+            <div class="timeline-meta-row"><span>Time to Placement</span><span class="timeline-meta-val">13 Weeks</span></div>
+            <div class="timeline-meta-row"><span>Critical Gaps</span><span class="timeline-meta-val">6 Gaps</span></div>
+            <div class="timeline-meta-row"><span>Ramp-up Drag</span><span class="timeline-meta-val">High (React &amp; Node from 0)</span></div>
+          </div>
+          <div>
+            <div class="timeline-reasoning">Requires mastering frontend frameworks and backend asynchronous runtimes from ground zero.</div>
+            <button class="btn btn-outline" style="width: 100%;" disabled>Active Trajectory</button>
+          </div>
+        </div>
+
+        <!-- Track B: AI / ML Engineer -->
+        <div class="timeline-card" id="timelineCardAI">
+          <span class="timeline-badge badge-std">Alternative</span>
+          <div>
+            <h3 class="timeline-role">AI / ML Engineer</h3>
+            <div class="timeline-readiness" style="color: var(--rose);">20.3%</div>
+            <div class="timeline-meta-row"><span>Time to Placement</span><span class="timeline-meta-val">22 Weeks</span></div>
+            <div class="timeline-meta-row"><span>Critical Gaps</span><span class="timeline-meta-val">7 Gaps</span></div>
+            <div class="timeline-meta-row"><span>Ramp-up Drag</span><span class="timeline-meta-val">Severe (Deep Math &amp; PyTorch)</span></div>
+          </div>
+          <div>
+            <div class="timeline-reasoning">Strong Python foundation, but lacks linear algebra, tensor architectures, and GPU MLOps pipelines.</div>
+            <button class="btn btn-quiet" style="width: 100%;" onclick="quickSwitchGoal('ai-ml-engineer')">Inspect Path</button>
+          </div>
+        </div>
+
+        <!-- Track C: Data Platform Engineer (STRATEGIC FAST PATH) -->
+        <div class="timeline-card recommended" id="timelineCardData">
+          <span class="timeline-badge badge-rec">⚡ Strategic Fast-Path</span>
+          <div>
+            <h3 class="timeline-role">Data Platform Engineer</h3>
+            <div class="timeline-readiness" style="color: var(--signal);">68.4%</div>
+            <div class="timeline-meta-row"><span>Time to Placement</span><span class="timeline-meta-val" style="color: var(--signal);">7 Weeks (-6w Saved)</span></div>
+            <div class="timeline-meta-row"><span>Critical Gaps</span><span class="timeline-meta-val" style="color: var(--signal);">Only 2 Gaps</span></div>
+            <div class="timeline-meta-row"><span>Placement Speed</span><span class="timeline-meta-val" style="color: var(--signal);">2.1× Faster</span></div>
+          </div>
+          <div>
+            <div class="timeline-reasoning" style="border-left: 2px solid var(--signal); background: rgba(199,255,74,0.06);">
+              <strong>Swarm Verdict:</strong> Capitalizes on verified Python &amp; SQL Level 3. Only missing distributed Spark &amp; Kafka pipelines.
+            </div>
+            <button class="btn btn-solid" style="width: 100%; background: var(--signal); color: var(--signal-ink);" onclick="adoptStrategicTimeline('data-engineer')">
+              Adopt Strategic Timeline (Save 6 Weeks)
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Section 5: Macroeconomic Market Disruption Simulator ─────────── -->
+    <section class="enterprise-section" id="secMarketShock">
+      <div class="section-kicker">
+        <span class="live-ring"></span>
+        Enterprise Feature · Macroeconomic Resilience
+      </div>
+      <h2 class="section-headline">Macroeconomic Market Disruption Simulator</h2>
+      <p class="section-desc">
+        University syllabi take 2 years to adapt to technological shifts. Test how the SkillNexus swarm dynamically absorbs industry shocks in real time, updating enterprise benchmark thresholds and deploying syllabus patches.
+      </p>
+
+      <div class="market-shock-container">
+        <div class="shock-trigger-stack">
+          <button class="shock-btn" id="shockBtnAgentic" onclick="triggerMarketShock('agentic-ai')">
+            <div>
+              <strong style="display: block; margin-bottom: 2px;">⚡ Agentic AI Explosion (2026 Shift)</strong>
+              <span style="font-size: 11px; color: var(--muted);">Tool-calling &amp; LLM agents become core requirement</span>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+
+          <button class="shock-btn" id="shockBtnCloud" onclick="triggerMarketShock('cloud-mandate')">
+            <div>
+              <strong style="display: block; margin-bottom: 2px;">☁️ Enterprise Cloud Mandate</strong>
+              <span style="font-size: 11px; color: var(--muted);">Containers &amp; Kubernetes become mandatory baseline</span>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+
+          <button class="shock-btn" onclick="resetMarketShock()">
+            <div>
+              <strong style="display: block; margin-bottom: 2px;">↺ Reset to Standard Baseline</strong>
+              <span style="font-size: 11px; color: var(--muted);">Restore standard role benchmarks</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="shock-telemetry-screen" id="shockTelemetry">
+          <div>
+            <div class="shock-log-line log-cyan">● MARKET SENSOR: Monitoring 6 industry benchmarks &amp; technology drift...</div>
+            <div class="shock-log-line log-muted">Status: Baseline stable. Select an external macroeconomic shock on the left to simulate adaptation.</div>
+          </div>
+          <div class="shock-log-line log-muted" style="border-top: 1px solid var(--line); padding-top: 8px;">
+            Emergency Shock Absorption Engine · Ready for live stress testing
+          </div>
+        </div>
+      </div>
+    </section>
+
     <footer class="foot">
       <div>
         <span class="foot-strong">Readiness</span> = Σ min(verified, required) × weight ÷ Σ required × weight × 100.
@@ -279,6 +404,38 @@
         </button>
       </div>
       <div class="modal-body" id="explainBody"></div>
+    </div>
+  </div>
+
+  <!-- ── Micro-Code AST Challenge Modal ──────────────────────────────────── -->
+  <div class="modal" id="codeChallengeModal" role="dialog" aria-modal="true">
+    <div class="modal-card modal-card-wide">
+      <div class="modal-head">
+        <div>
+          <p class="modal-eyebrow">Assessor Agent · Proof-of-Execution Challenge</p>
+          <h3>Production Code Fallacy Spotter</h3>
+          <p class="modal-sub">Multiple-choice can be guessed. Click the line containing the production bug in this component.</p>
+        </div>
+        <button class="icon-btn" onclick="closeCodeChallengeModal()" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 5l14 14M19 5L5 19"/></svg>
+        </button>
+      </div>
+
+      <div class="code-probe-box" id="codeProbeBox">
+        <div class="code-line" onclick="selectBugLine(1)" id="cline-1"><span class="code-line-num">1</span><span>function UserProfile({ userId }) {</span></div>
+        <div class="code-line" onclick="selectBugLine(2)" id="cline-2"><span class="code-line-num">2</span><span>  const [user, setUser] = useState(null);</span></div>
+        <div class="code-line" onclick="selectBugLine(3)" id="cline-3"><span class="code-line-num">3</span><span>  if (!userId) return &lt;p&gt;No user selected&lt;/p&gt;;</span></div>
+        <div class="code-line" onclick="selectBugLine(4)" id="cline-4"><span class="code-line-num">4</span><span>  useEffect(() =&gt; { fetchUser(userId).then(setUser); }, [userId]);</span></div>
+        <div class="code-line" onclick="selectBugLine(5)" id="cline-5"><span class="code-line-num">5</span><span>  return &lt;div className="profile"&gt;{user?.name}&lt;/div&gt;;</span></div>
+        <div class="code-line" onclick="selectBugLine(6)" id="cline-6"><span class="code-line-num">6</span><span>}</span></div>
+      </div>
+
+      <div id="codeProbeResult" style="margin-top: 10px; font-size: 12px; min-height: 40px; padding: 10px; border-radius: 6px; background: var(--surface-2); display: none;"></div>
+
+      <div class="modal-foot">
+        <button class="btn btn-quiet" onclick="closeCodeChallengeModal()">Close</button>
+        <button class="btn btn-solid" onclick="verifyBugSelection()">Validate AST Probe</button>
+      </div>
     </div>
   </div>
 

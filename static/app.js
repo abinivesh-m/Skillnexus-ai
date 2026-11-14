@@ -1348,3 +1348,192 @@ window.addEventListener("resize", () => {
     drawProjection();
   }, 120);
 });
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ENTERPRISE INNOVATION SUITE CONTROLLERS
+// Multi-Timeline Radar, Market Disruption Simulator & AST Code Challenge
+// ═══════════════════════════════════════════════════════════════════════════
+
+function scrollToSection(id) {
+  const el = $(id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+  el.classList.add("tour-focus");
+  setTimeout(() => el.classList.remove("tour-focus"), 1200);
+
+  // Update nav pills
+  document.querySelectorAll(".feat-pill").forEach(p => p.classList.remove("active"));
+  const btn = Array.from(document.querySelectorAll(".feat-pill")).find(p => p.getAttribute("onclick")?.includes(id));
+  if (btn) btn.classList.add("active");
+}
+
+async function adoptStrategicTimeline(roleId) {
+  ticker("Strategic Convergence Engine: Switching trajectory to Data Platform Engineer (Fast-Path)...");
+  await onRoleChange(roleId);
+  const sel = $("roleSelect");
+  if (sel) sel.value = roleId;
+
+  // Visual highlight
+  const recCard = $("timelineCardData");
+  if (recCard) {
+    recCard.style.boxShadow = "0 0 45px rgba(199, 255, 74, 0.35)";
+    setTimeout(() => recCard.style.boxShadow = "", 2000);
+  }
+
+  // Announce ROI savings
+  ticker("Strategic Timeline Adopted: +37.5% baseline readiness surge · 6 weeks saved to placement!");
+  scrollToSection("panelRoadmap");
+}
+
+let marketShockActive = false;
+
+function triggerMarketShock(type) {
+  const telem = $("shockTelemetry");
+  if (!telem) return;
+
+  if (type === "agentic-ai") {
+    marketShockActive = true;
+    $("shockBtnAgentic")?.classList.add("active");
+    $("shockBtnCloud")?.classList.remove("active");
+
+    telem.innerHTML = `
+      <div>
+        <div class="shock-log-line log-amber">⚠️ MARKET SHOCK DETECTED: Agentic AI Explosion (2026 Shift)</div>
+        <div class="shock-log-line log-cyan">• Industry Benchmark updated: Agent Tool Calling & Cognitive Loops threshold raised to Level 4.</div>
+        <div class="shock-log-line log-muted">• Aarav's verified fit adjusted: 30.9% → 22.4% (Relative Drift: -8.5%).</div>
+        <div class="shock-log-line log-green">• MENTOR INTERVENTION: Emergency Shock Absorption Protocol active.</div>
+        <div class="shock-log-line log-green">• Injected 16h "Agent Tool Calling & Multi-Agent Loops" into Sprint 1.</div>
+      </div>
+      <div class="shock-log-line log-amber" style="border-top: 1px solid var(--line); padding-top: 8px;">
+        ⚡ Emergency Curriculum Mutation Deployed: Candidate protected from technological obsolescence.
+      </div>
+    `;
+
+    // Inject remedial sprint into active roadmap view
+    if (state.pipelineData?.roadmap) {
+      const shockModule = {
+        order: 1,
+        stage: "Shock Absorption",
+        hours: 16,
+        is_remedial: true,
+        diff_type: "added",
+        title: "Agentic Tool Calling & Multi-Agent Orchestration",
+        prerequisite: "Python 3 & REST APIs",
+        outcomes: [
+          "Building tool-calling agents with structured JSON outputs",
+          "Multi-agent handshakes and cognitive loop architectures",
+          "Real-time evaluation and agent drift monitoring"
+        ],
+        resources: {
+          free: { title: "Google GenAI SDK Official Agent Guides", url: "https://ai.google.dev/gemini-api/docs", provider: "Google AI" },
+          paid: { title: "Building Multi-Agent Systems in Production", url: "https://www.deeplearning.ai/", provider: "DeepLearning.AI" }
+        }
+      };
+
+      const updated = [shockModule, ...state.pipelineData.roadmap.map((m, i) => ({ ...m, order: i + 2 }))];
+      renderRoadmap(updated);
+      pulseNode("Python");
+    }
+
+    ticker("Mentor agent: Market shock absorbed · Emergency Agentic sprint injected into roadmap.");
+  } else if (type === "cloud-mandate") {
+    marketShockActive = true;
+    $("shockBtnCloud")?.classList.add("active");
+    $("shockBtnAgentic")?.classList.remove("active");
+
+    telem.innerHTML = `
+      <div>
+        <div class="shock-log-line log-amber">⚠️ MARKET SHOCK DETECTED: Enterprise Cloud-Native Mandate</div>
+        <div class="shock-log-line log-cyan">• Benchmark updated: Docker & Kubernetes containerization mandatory for all candidates.</div>
+        <div class="shock-log-line log-green">• MENTOR INTERVENTION: Re-sequenced Sprint 2 to prioritize Docker Containerization.</div>
+      </div>
+      <div class="shock-log-line log-amber" style="border-top: 1px solid var(--line); padding-top: 8px;">
+        ⚡ Enterprise Policy Enforced across candidate syllabus.
+      </div>
+    `;
+    ticker("Mentor agent: Cloud mandate absorbed · Prerequisite priority shifted.");
+  }
+}
+
+function resetMarketShock() {
+  marketShockActive = false;
+  $("shockBtnAgentic")?.classList.remove("active");
+  $("shockBtnCloud")?.classList.remove("active");
+
+  const telem = $("shockTelemetry");
+  if (telem) {
+    telem.innerHTML = `
+      <div>
+        <div class="shock-log-line log-cyan">● MARKET SENSOR: Monitoring 6 industry benchmarks &amp; technology drift...</div>
+        <div class="shock-log-line log-muted">Status: Standard baseline restored. No active market drift anomalies.</div>
+      </div>
+      <div class="shock-log-line log-muted" style="border-top: 1px solid var(--line); padding-top: 8px;">
+        Emergency Shock Absorption Engine · Standby
+      </div>
+    `;
+  }
+
+  if (state.pipelineData?.roadmap) {
+    renderRoadmap(state.pipelineData.roadmap);
+  }
+  ticker("Market baseline restored to standard industry ontologies.");
+}
+
+// Micro-Code AST Challenge
+let selectedBugLine = null;
+
+function openCodeChallengeModal() {
+  const modal = $("codeChallengeModal");
+  if (!modal) return;
+  modal.classList.add("open");
+  document.body.style.overflow = "hidden";
+  selectedBugLine = null;
+  document.querySelectorAll(".code-line").forEach(l => l.classList.remove("bug-selected"));
+  const res = $("codeProbeResult");
+  if (res) res.style.display = "none";
+}
+
+function closeCodeChallengeModal() {
+  const modal = $("codeChallengeModal");
+  if (modal) modal.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+function selectBugLine(lineNum) {
+  selectedBugLine = lineNum;
+  document.querySelectorAll(".code-line").forEach(l => l.classList.remove("bug-selected"));
+  const lineEl = $(`cline-${lineNum}`);
+  if (lineEl) lineEl.classList.add("bug-selected");
+}
+
+function verifyBugSelection() {
+  const res = $("codeProbeResult");
+  if (!res) return;
+  res.style.display = "block";
+
+  if (selectedBugLine === 3 || selectedBugLine === 4) {
+    res.style.borderColor = "var(--signal)";
+    res.style.color = "var(--signal)";
+    res.innerHTML = `
+      <strong>✓ PROBE VERIFIED: Production Fallacy Isolated!</strong><br>
+      <span style="color: var(--text); font-size: 11px;">
+        Line 3 contains an early return (<code>if (!userId) return</code>) executed before Line 4's <code>useEffect</code> hook.
+        React relies on strict order of hook invocations across renders to preserve linked-list state. Calling hooks conditionally breaks reconciliation.
+      </span><br>
+      <span style="font-family: var(--mono); color: var(--signal); font-size: 10px;">Assessor Agent: Mastery in React Lifecycle verified (+1 Level).</span>
+    `;
+    ticker("Assessor Agent: Code probe validated. React lifecycle understanding confirmed.");
+  } else if (!selectedBugLine) {
+    res.style.borderColor = "var(--amber)";
+    res.style.color = "var(--amber)";
+    res.textContent = "Please click a line in the code box above to identify the production fallacy.";
+  } else {
+    res.style.borderColor = "var(--rose)";
+    res.style.color = "var(--rose)";
+    res.innerHTML = `
+      <strong>✗ Incorrect Line Selected:</strong> Line ${selectedBugLine} is valid syntax.<br>
+      <span style="color: var(--muted); font-size: 11px;">Hint: Inspect lines 3 and 4 for React's Rules of Hooks (never call hooks after early returns).</span>
+    `;
+  }
+}

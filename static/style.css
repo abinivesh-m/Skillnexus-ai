@@ -993,3 +993,279 @@ h1 em { font-style: italic; color: var(--signal); }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+
+/* ==========================================================================
+   ENTERPRISE CAPABILITIES SHOWCASE & INNOVATION SUITE
+   Multi-Timeline Radar, Market Disruption Simulator & AST Code Challenge
+   ========================================================================== */
+
+.feature-nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 10px 0 16px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--line-soft);
+  scrollbar-width: none;
+}
+.feature-nav-bar::-webkit-scrollbar { display: none; }
+
+.feat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-family: var(--mono);
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.feat-pill:hover {
+  color: var(--text);
+  border-color: rgba(199, 255, 74, 0.4);
+  background: var(--surface-3);
+  transform: translateY(-1px);
+}
+.feat-pill.active {
+  color: var(--signal);
+  border-color: var(--signal);
+  background: var(--signal-dim);
+}
+
+/* Feature Section Container */
+.enterprise-section {
+  margin: 32px 0;
+  padding: 24px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+.enterprise-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--signal), transparent);
+  opacity: 0.4;
+}
+
+.section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--signal);
+  margin-bottom: 6px;
+}
+.section-headline {
+  font-family: var(--serif);
+  font-size: 26px;
+  line-height: 1.15;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.section-desc {
+  color: var(--muted);
+  font-size: 13px;
+  max-width: 780px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+/* Multi-Timeline Convergence Grid */
+.convergence-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+@media (max-width: 900px) {
+  .convergence-grid { grid-template-columns: 1fr; }
+}
+
+.timeline-card {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  transition: all 0.25s ease;
+}
+.timeline-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+}
+.timeline-card.recommended {
+  border-color: var(--signal);
+  background: linear-gradient(180deg, rgba(199, 255, 74, 0.05), var(--surface-2));
+  box-shadow: 0 0 30px rgba(199, 255, 74, 0.08);
+}
+
+.timeline-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.badge-rec {
+  background: var(--signal);
+  color: var(--signal-ink);
+}
+.badge-std {
+  background: var(--surface-3);
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.timeline-role {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.timeline-readiness {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin: 10px 0;
+}
+.timeline-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.timeline-meta-val {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.timeline-reasoning {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 12px 0 16px 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--surface-3);
+}
+
+/* Market Disruption Section */
+.market-shock-container {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 850px) {
+  .market-shock-container { grid-template-columns: 1fr; }
+}
+
+.shock-trigger-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.shock-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--sans);
+  font-weight: 500;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+.shock-btn:hover {
+  background: var(--surface-3);
+  border-color: rgba(242, 169, 59, 0.4);
+}
+.shock-btn.active {
+  border-color: var(--amber);
+  background: var(--amber-dim);
+  color: var(--text);
+}
+
+.shock-telemetry-screen {
+  background: #08090b;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.shock-log-line {
+  margin-bottom: 6px;
+  line-height: 1.45;
+}
+.log-amber { color: var(--amber); }
+.log-cyan { color: var(--teal); }
+.log-green { color: var(--signal); }
+.log-muted { color: var(--faint); }
+
+/* Micro-Code Fallacy Spotter */
+.code-probe-box {
+  background: #08090c;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  margin: 14px 0;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.code-line {
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  display: flex;
+  gap: 12px;
+}
+.code-line:hover {
+  background: var(--surface-3);
+}
+.code-line.bug-selected {
+  background: rgba(255, 107, 94, 0.18);
+  border: 1px solid var(--rose);
+}
+.code-line-num {
+  color: var(--faint);
+  user-select: none;
+  min-width: 18px;
+}

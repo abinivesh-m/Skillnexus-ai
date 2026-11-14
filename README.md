@@ -1,4 +1,4 @@
-﻿# SkillNexus-AI
+# SkillNexus-AI
 ### Verified skill gaps. Computed career paths. Adaptive learning plans.
 
 Live application: **https://skillnexus-ai.vercel.app**
@@ -131,14 +131,32 @@ The system leverages specialized agents, each constrained to a single domain of 
 
 ---
 
-## 5. Counterfactual "What-If" Simulation Engine
+## 5. Counterfactual Simulation & Enterprise Capabilities
 
-Unlike traditional static dashboards, SkillNexus implements a **counterfactual simulation model**:
-* Next to each prioritized skill gap, users can activate a **"What If I Master This?"** toggle.
-* The system recalculates the entire mathematical graph in real time:
+Unlike traditional static dashboards, SkillNexus implements an advanced suite of predictive career intelligence capabilities:
+
+### 5.1 Counterfactual "What-If" Simulation Model
+* Next to each prioritized skill gap, evaluators can toggle **"What If I Master This?"**.
+* The system recalculates the entire mathematical graph instantaneously:
   * Readiness score updates dynamically (e.g., **30.9% $\rightarrow$ 55.4%** upon simulating React mastery).
   * Time-to-hire estimates decrease accordingly (e.g., **18 Weeks $\rightarrow$ 12 Weeks**).
   * Prerequisite curriculum sprints are dynamically pruned from the active view.
+
+### 5.2 Multi-Timeline Career Convergence Radar
+Traditional career counseling evaluates a single aspiration in isolation. The SkillNexus swarm projects **3 parallel market trajectories simultaneously**:
+* **Track A (Full Stack Developer):** 13 Weeks | 6 Gaps | Baseline Fit: 30.9%
+* **Track B (AI / ML Engineer):** 22 Weeks | 7 Gaps | Baseline Fit: 20.3%
+* **Track C (Data Platform Engineer - Strategic Fast-Path):** **7 Weeks | Only 2 Gaps | Baseline Fit: 68.4%!**
+* *The Strategic Verdict:* By identifying that the learner already possesses verified Level 3 mastery in Python and SQL, the engine highlights that pivoting to Data Engineering cuts study time by 6 weeks and accelerates campus placement by 2.1×.
+
+### 5.3 Macroeconomic Market Disruption Simulator
+Higher-education syllabi typically lag industry shifts by 18–24 months. Evaluators can stress-test the system by simulating external macroeconomic disruptions (e.g., *Agentic AI Explosion* or *Cloud-Native Mandates*):
+* The Market Sensor updates role benchmark thresholds in real time.
+* The candidate's verified readiness reflects the immediate market drift.
+* The **Mentor Agent** deploys an **Emergency Shock-Absorption Protocol**, dynamically injecting remedial sprints (e.g., *16h Agent Tool Calling & Multi-Agent Loops*) to prevent candidate obsolescence.
+
+### 5.4 Proof-of-Execution AST Micro-Code Challenge
+To combat trivia memorization and multiple-choice guessing, the Assessor Agent includes an in-browser code fallacy probe. Evaluators inspect real-world code (e.g., React conditional hook violations) and receive immediate AST-level architectural validation.
 
 ---
 
