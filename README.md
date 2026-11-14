@@ -3,6 +3,18 @@
 
 Live application: **https://skillnexus-ai.vercel.app**
 
+## Judge quickstart
+
+1. Open the live application.
+2. Press **Run 10s demo**. The numbered callout explains each agent handoff and highlights the exact panel being changed.
+3. Click **Explain this number** to inspect the weighted readiness calculation.
+4. Click **Start check-in**, answer the diagnostic, and observe correct answers, explanations, and the adaptive re-plan.
+5. Toggle **What if I learn React?** to see a deterministic counterfactual change the score and schedule.
+
+### The one-line pitch
+
+**SkillNexus proves what a learner knows, computes the gap to a target role, and adapts the learning path when new evidence arrives.**
+
 SkillNexus-AI is a multi-agent career-planning platform for identifying the difference between what a learner claims and what they can demonstrate. It audits a learner profile, benchmarks it against a target role, tests uncertain skills, and rewrites the learning path when evidence changes.
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com)
@@ -50,14 +62,14 @@ The platform employs a reactive event bus where specialized agents collaborate s
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Candidate as 👤 Candidate / Learner
-    participant UI as 🖥️ Reactive Interface
-    participant Profile as 🕵️ Profile Agent
-    participant Gap as 🎯 Gap Agent
-    participant Curr as 🗺️ Curriculum Agent
-    participant Res as 📚 Resource Agent
-    participant Assessor as 📝 Assessor Agent
-    participant Mentor as 🧠 Mentor Agent (Adaptive Core)
+    actor Candidate as Candidate / Learner
+    participant UI as Reactive Interface
+    participant Profile as Profile Agent
+    participant Gap as Gap Agent
+    participant Curr as Curriculum Agent
+    participant Res as Resource Agent
+    participant Assessor as Assessor Agent
+    participant Mentor as Mentor Agent (Adaptive Core)
 
     Candidate->>UI: Selects Profile (Aarav Patel · Target: Full Stack)
     UI->>Profile: Audit credentials & normalize skill schemas
@@ -69,7 +81,7 @@ sequenceDiagram
     Res->>Res: Attach 1 Free + 1 Paid authenticated resource per sprint
     Res-->>UI: Deliver initial personalized curriculum
 
-    Note over Candidate,Mentor: ⚡ Dynamic Adaptive Feedback Loop
+    Note over Candidate,Mentor: Dynamic Adaptive Feedback Loop
     Candidate->>UI: Completes Diagnostic Assessment
     UI->>Assessor: Grade concept responses
     Assessor-->>Mentor: Conceptual misconception detected (Score < 66%)

@@ -148,6 +148,22 @@ function ticker(msg) {
   if (el) el.textContent = msg;
 }
 
+function tourStep(step, title, detail, selector = null) {
+  const callout = $("tourCallout");
+  if (!callout) return;
+  document.querySelectorAll(".tour-focus").forEach((el) => el.classList.remove("tour-focus"));
+  $("tourStep").textContent = step;
+  $("tourTitle").textContent = title;
+  $("tourDetail").textContent = detail;
+  if (selector) document.querySelector(selector)?.classList.add("tour-focus");
+  callout.classList.add("open");
+}
+
+function endTourStep() {
+  $("tourCallout")?.classList.remove("open");
+  document.querySelectorAll(".tour-focus").forEach((el) => el.classList.remove("tour-focus"));
+}
+
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ── Renderers ───────────────────────────────────────────────────────────────
@@ -1285,25 +1301,30 @@ async function play10SecondTour() {
   if (btn) btn.textContent = "Running demo…";
 
   resetSimulations();
-  await wait(700);
+  tourStep("01 / 04", "Baseline verified", "The readiness score starts from demonstrated evidence, not resume claims.", ".stage-readout");
+  await wait(1100);
 
   setAgent("GapAgent");
+  tourStep("02 / 04", "Gap agent found the bottleneck", "React carries the highest weighted severity for the Full Stack Developer benchmark.", "#panelGaps");
   ticker("Gap agent: React carries the highest weighted severity against the Full Stack benchmark.");
-  await wait(1100);
+  await wait(1700);
 
   // Visual cue on the graph before toggle
   pulseNode("React");
-  await wait(400);
+  tourStep("03 / 04", "Counterfactual simulation", "React mastery is simulated on the live skill graph — no database state is changed.", "[data-whatif]");
+  await wait(1100);
 
   toggleSimulateSkill("React");
-  await wait(1800);
+  await wait(1500);
 
   setAgent("CurriculumAgent");
+  tourStep("04 / 04", "Path recomputed", "Readiness rises and the prerequisite roadmap is pruned in real time.", "#panelRoadmap");
   ticker("Curriculum agent: prerequisite sprints pruned, schedule recomputed.");
-  await wait(1400);
+  await wait(1900);
 
   setAgent("MentorAgent");
   ticker("Mentor agent: readiness updated. This is the counterfactual model, live.");
+  endTourStep();
 
   state.tourPlaying = false;
   if (btn) btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Run 10s demo`;
