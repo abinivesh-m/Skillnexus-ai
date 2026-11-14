@@ -203,6 +203,10 @@ Skillnexus-ai/
 ├── domain.py                       # deterministic weighted mathematics & data models
 ├── agents.py                       # 6 specialized collaborating agents & event handoff bus
 ├── requirements.txt                # Lean runtime dependencies
+├── Dockerfile                      # Cloud Run-compatible production image
+├── .dockerignore                   # Excludes secrets, caches, and tests from image
+├── benchmarks/
+│   └── README.md                   # Reproducible benchmark evidence
 ├── vercel.json                     # Serverless production deployment configuration
 ├── data/
 │   ├── learners.json               # Pre-seeded candidate profiles & credential histories
@@ -244,6 +248,23 @@ python tests/test_domain_and_agents.py
 python -m uvicorn main:app --port 8000
 ```
 Access the application workspace at **[http://localhost:8000](http://localhost:8000)**.
+
+### Container deployment
+
+The repository includes a production-ready container entrypoint compatible with
+Google Cloud Run and other container platforms:
+
+```bash
+docker build -t skillnexus-ai .
+docker run --rm -p 8080:8080 -e GEMINI_API_KEY="$GEMINI_API_KEY" skillnexus-ai
+```
+
+The container binds to `0.0.0.0` and respects the platform-provided `PORT`
+environment variable. Secrets are supplied at runtime and excluded from the
+image by `.dockerignore`.
+
+See [`benchmarks/README.md`](benchmarks/README.md) for measured test evidence
+and the exact API paths covered by the contract suite.
 
 ---
 

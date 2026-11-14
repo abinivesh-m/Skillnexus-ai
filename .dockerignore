@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+.vercel
+__pycache__
+*.pyc
+.pytest_cache
+tests
+docs/assets/*.png
+*.log
