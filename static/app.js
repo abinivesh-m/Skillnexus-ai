@@ -25,7 +25,8 @@ const state = {
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) =>
-  String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  String(s ?? "").replace(/[\u0026<>\u0022\u0027]/g, (c) =>
+    ({ "\u0026": "\u0026amp;", "<": "\u0026lt;", ">": "\u0026gt;", "\u0022": "\u0026quot;", "\u0027": "\u0026#39;" }[c]));
 
 const fmt = (n, d = 1) => {
   const v = Number(n) || 0;
@@ -417,6 +418,17 @@ function openExplainModal() {
     </p>`;
   $("explainModal").classList.add("open");
   document.body.style.overflow = "hidden";
+
+  const container = $("explainModal").querySelector(".modal-body") || $("explainModal").firstElementChild;
+  if (container) {
+    container.style.opacity = "0";
+    container.style.transform = "translateY(8px)";
+    requestAnimationFrame(() => {
+      container.style.transition = "opacity 0.18s ease, transform 0.18s ease";
+      container.style.opacity = "1";
+      container.style.transform = "translateY(0)";
+    });
+  }
 }
 
 function closeExplainModal() {
@@ -455,6 +467,18 @@ async function openAssessmentModal(skill) {
   const modal = $("assessmentModal");
   modal.classList.add("open");
   document.body.style.overflow = "hidden";
+
+  // Small entrance stagger for modal content
+  const container = modal.querySelector(".modal-body");
+  if (container) {
+    container.style.opacity = "0";
+    container.style.transform = "translateY(8px)";
+    requestAnimationFrame(() => {
+      container.style.transition = "opacity 0.18s ease, transform 0.18s ease";
+      container.style.opacity = "1";
+      container.style.transform = "translateY(0)";
+    });
+  }
 
   const gap = (state.pipelineData?.gaps || []).find((g) => g.skill === skill);
   const level = gap ? gap.required_level : 3;
@@ -725,9 +749,9 @@ function animateNumber(id, target, decimals = 0) {
   requestAnimationFrame(step);
 }
 
-// ══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
 // 3D SKILL GRAPH — the learner's real competency map, rendered in space
-// ══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
 const graph = {
   canvas: null,
   ctx: null,
@@ -743,6 +767,10 @@ const graph = {
   parallaxY: 0,
   shards: [],
   hovered: null,
+  ambients: [],
+  bursts: [],
+  entranceProgress: 0,
+  entranceDone: false,
 };
 
 function initSkillGraph() {
@@ -784,6 +812,9 @@ function initSkillGraph() {
     const node = hitTest(e.clientX, e.clientY);
     if (node) openAssessmentModal(node.skill);
   });
+
+  // Spawn ambient particles once
+  for (let i = 0; i < 40; i++) spawnAmbient();
 
   requestAnimationFrame(drawGraph);
 }
@@ -895,6 +926,50 @@ function projectNode(node, cx, cy, scale, ay, ax) {
   return { px: cx + x1 * scale * fov, py: cy + y2 * scale * fov, depth: z2, fov };
 }
 
+function spawnAmbient() {
+  const angle = Math.random() * Math.PI * 2;
+  const radius = 0.4 + Math.random() * 0.5;
+  graph.ambients.push({
+    angle,
+    radius,
+    speed: 0.0004 + Math.random() * 0.0006,
+    size: 1 + Math.random() * 1.5,
+    alpha: 0.15 + Math.random() * 0.25,
+    hue: Math.random() < 0.5 ? 88 : 168, // signal or teal
+    vertical: (Math.random() - 0.5) * 0.8,
+  });
+}
+
+function burstAt(px, py, color) {
+  for (let i = 0; i < 18; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const spd = 1.5 + Math.random() * 3;
+    graph.bursts.push({
+      x: px,
+      y: py,
+      vx: Math.cos(ang) * spd,
+      vy: Math.sin(ang) * spd,
+      life: 1,
+      decay: 0.015 + Math.random() * 0.015,
+      size: 2 + Math.random() * 2,
+      color,
+    });
+  }
+}
+
+function updateAmbients(dt) {
+  for (const a of graph.ambients) a.angle += a.speed * dt;
+  for (let i = graph.bursts.length - 1; i >= 0; i--) {
+    const b = graph.bursts[i];
+    b.x += b.vx;
+    b.y += b.vy;
+    b.life -= b.decay;
+    if (b.life <= 0) graph.bursts.splice(i, 1);
+  }
+  // Maintain ambient count
+  while (graph.ambients.length < 40) spawnAmbient();
+}
+
 function drawGraph(ts) {
   const ctx = graph.ctx;
   if (!ctx) return;
@@ -912,18 +987,38 @@ function drawGraph(ts) {
   const cy = h * 0.46;
   const scale = Math.min(w, h) * 0.36;
 
-  const projected = graph.nodes.map((n) => ({ node: n, ...projectNode(n, cx, cy, scale, ay, ax) }));
-  projected.sort((a, b) => a.depth - b.depth); // far first
+  // Entrance animation
+  if (!graph.entranceDone) {
+    graph.entranceProgress = Math.min(1, graph.entranceProgress + 0.012);
+    if (graph.entranceProgress >= 1) graph.entranceDone = true;
+  }
+  const entrance = graph.entranceProgress;
 
-  // Quiet orbital rings make the rotation legible before a node is selected.
+  const projected = graph.nodes.map((n) => ({ node: n, ...projectNode(n, cx, cy, scale, ay, ax) }));
+  projected.sort((a, b) => a.depth - b.depth);
+
+  // Ambient particles (behind everything)
+  updateAmbients(16);
+  for (const a of graph.ambients) {
+    const x = cx + Math.cos(a.angle) * scale * a.radius * entrance;
+    const y = cy + a.vertical * scale * a.radius * entrance + Math.sin(a.angle) * scale * a.radius * 0.18 * entrance;
+    ctx.globalAlpha = a.alpha * entrance;
+    ctx.fillStyle = `hsl(${a.hue}, 90%, 60%)`;
+    ctx.beginPath();
+    ctx.arc(x, y, a.size * entrance, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Quiet orbital rings
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(ax * 0.35);
-  ctx.strokeStyle = "rgba(199,255,74,0.07)";
+  ctx.strokeStyle = `rgba(199,255,74,${0.07 * entrance})`;
   ctx.lineWidth = 1;
   for (const ratio of [0.72, 1]) {
     ctx.beginPath();
-    ctx.ellipse(0, 0, scale * ratio, scale * ratio * (0.25 + Math.abs(Math.sin(ax)) * 0.18), 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, scale * ratio * entrance, scale * ratio * (0.25 + Math.abs(Math.sin(ax)) * 0.18) * entrance, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.restore();
@@ -935,7 +1030,7 @@ function drawGraph(ts) {
     const b = projected.find((p) => p.node.skill === graph.nodes[j]?.skill);
     if (!a || !b) continue;
     const active = a.node.status === "verified" || b.node.status === "verified";
-    ctx.strokeStyle = active ? "rgba(199,255,74,0.16)" : "rgba(255,255,255,0.055)";
+    ctx.strokeStyle = active ? `rgba(199,255,74,${0.16 * entrance})` : `rgba(255,255,255,${0.055 * entrance})`;
     ctx.beginPath();
     ctx.moveTo(a.px, a.py);
     ctx.lineTo(b.px, b.py);
@@ -951,17 +1046,28 @@ function drawGraph(ts) {
     else if (n.status === "claimed") color = "#f2a93b";
     else color = "rgba(255,107,94,0.55)";
 
-    const r = Math.max(1.6, n.radius * p.fov);
-    const fade = Math.max(0.18, Math.min(1, (2.2 - p.depth) / 2.2));
+    const r = Math.max(1.6, n.radius * p.fov) * entrance;
+    const fade = Math.max(0.18, Math.min(1, (2.2 - p.depth) / 2.2)) * entrance;
 
-    if (n.status === "verified" || n.status === "claimed" || n === graph.hovered) {
-      const glow = ctx.createRadialGradient(p.px, p.py, 0, p.px, p.py, r * 5);
-      glow.addColorStop(0, color.replace(")", ", 0.5)").replace("rgb", "rgba"));
-      glow.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = n.status === "verified" ? "rgba(199,255,74,0.16)" : "rgba(242,169,59,0.12)";
+    // Glow for verified/claimed/hovered
+    if ((n.status === "verified" || n.status === "claimed" || n === graph.hovered) && entrance > 0.5) {
+      const base = n.status === "verified" ? "rgba(199,255,74,0.16)" : n.status === "claimed" ? "rgba(242,169,59,0.12)" : "rgba(199,255,74,0.18)";
+      ctx.fillStyle = base;
       ctx.beginPath();
       ctx.arc(p.px, p.py, r * 4.5, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    // Pulsing ring for hovered
+    if (n === graph.hovered) {
+      const pulse = 1 + Math.sin(ts / 200) * 0.15;
+      ctx.strokeStyle = "#c7ff4a";
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.6 * entrance;
+      ctx.beginPath();
+      ctx.arc(p.px, p.py, r * 1.8 * pulse, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
     }
 
     ctx.globalAlpha = fade;
@@ -980,9 +1086,9 @@ function drawGraph(ts) {
       ctx.stroke();
     }
 
-    // Labels for the most significant nodes only
+    // Labels for significant nodes
     const significant = n.weight >= 4 || n.status === "verified" || n === graph.hovered;
-    if (significant && w > 720) {
+    if (significant && w > 720 && entrance > 0.7) {
       ctx.globalAlpha = fade * (n === graph.hovered ? 1 : 0.55);
       ctx.fillStyle = n === graph.hovered ? "#ecedef" : "rgba(236,237,239,0.75)";
       ctx.font = "500 10px 'JetBrains Mono', monospace";
@@ -1007,6 +1113,17 @@ function drawGraph(ts) {
     ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
     ctx.stroke();
   }
+
+  // Burst particles (click feedback)
+  for (let i = graph.bursts.length - 1; i >= 0; i--) {
+    const b = graph.bursts[i];
+    ctx.globalAlpha = b.life;
+    ctx.fillStyle = b.color;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.size * b.life, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
 
   requestAnimationFrame(drawGraph);
 }
@@ -1041,12 +1158,14 @@ function pulseNode(skill) {
   if (!node) return;
   const p = projectNode(node, w * 0.5, h * 0.46, Math.min(w, h) * 0.36, graph.angleY, graph.angleX);
   graph.shards.push({ x: p.px, y: p.py, r: 6, a: 0.75 });
+  // Add click burst
+  burstAt(p.px, p.py, node.status === "verified" ? "#c7ff4a" : node.status === "claimed" ? "#f2a93b" : "#ff6b5e");
   rebuildSkillGraph();
 }
 
-// ══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
 // READINESS PROJECTION — what the plan actually buys
-// ══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
 function initProjection() {
   const canvas = $("skillGyroCanvas");
   if (!canvas) return;
@@ -1155,9 +1274,9 @@ function drawProjection() {
   ctx.fillText("projected readiness if the plan is followed", padL, 8);
 }
 
-// ══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
 // SIGNATURE TOUR
-// ══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
 async function play10SecondTour() {
   if (state.tourPlaying || !state.pipelineData) return;
   state.tourPlaying = true;
@@ -1171,6 +1290,10 @@ async function play10SecondTour() {
   setAgent("GapAgent");
   ticker("Gap agent: React carries the highest weighted severity against the Full Stack benchmark.");
   await wait(1100);
+
+  // Visual cue on the graph before toggle
+  pulseNode("React");
+  await wait(400);
 
   toggleSimulateSkill("React");
   await wait(1800);
@@ -1190,6 +1313,13 @@ async function play10SecondTour() {
 window.addEventListener("load", () => {
   initProjection();
   drawProjection();
+
+  // Page entrance stagger
+  document.body.style.opacity = "0";
+  requestAnimationFrame(() => {
+    document.body.style.transition = "opacity 0.35s ease";
+    document.body.style.opacity = "1";
+  });
 });
 window.addEventListener("resize", () => {
   setTimeout(() => {

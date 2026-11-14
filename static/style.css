@@ -397,13 +397,14 @@ h1 em { font-style: italic; color: var(--signal); }
 #skillGyroCanvas { width: 100%; max-width: 300px; height: auto; display: block; opacity: 0.9; }
 .gyro-cap {
   position: absolute;
-  right: 0;
-  bottom: 0;
+  right: 4px;
+  bottom: 14px;
   font-family: var(--mono);
   font-size: 9px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--faint);
+  z-index: 2;
 }
 
 /* ── Agent strip ────────────────────────────────────────────────────────── */
