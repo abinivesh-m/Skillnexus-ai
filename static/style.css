@@ -1029,11 +1029,14 @@ h1 em { font-style: italic; color: var(--signal); }
   transition: all 0.2s ease;
 }
 .feat-pill:hover {
-  color: var(--text);
-  border-color: rgba(199, 255, 74, 0.4);
-  background: var(--surface-3);
+  color: var(--signal);
+  border-color: var(--signal);
+  background: var(--signal-dim);
+  box-shadow: 0 0 20px rgba(199,255,74,.10);
   transform: translateY(-1px);
 }
+.feat-pill:focus-visible { outline:2px solid var(--signal); outline-offset:3px; }
+.feature-index { color:var(--signal); font-size:9px; letter-spacing:.08em; }
 .feat-pill.active {
   color: var(--signal);
   border-color: var(--signal);
@@ -1049,7 +1052,9 @@ h1 em { font-style: italic; color: var(--signal); }
   border: 1px solid var(--line);
   position: relative;
   overflow: hidden;
+  transition: border-color .25s ease, box-shadow .25s ease;
 }
+.enterprise-section:hover { border-color:rgba(199,255,74,.24); box-shadow:0 18px 60px -42px rgba(199,255,74,.28); }
 .enterprise-section::before {
   content: "";
   position: absolute;
@@ -1109,8 +1114,9 @@ h1 em { font-style: italic; color: var(--signal); }
   transition: all 0.25s ease;
 }
 .timeline-card:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-  transform: translateY(-2px);
+  border-color: var(--signal);
+  box-shadow: 0 0 24px rgba(199,255,74,.10);
+  transform: translateY(-3px);
 }
 .timeline-card.recommended {
   border-color: var(--signal);
@@ -1209,14 +1215,18 @@ h1 em { font-style: italic; color: var(--signal); }
   transition: all 0.2s ease;
 }
 .shock-btn:hover {
-  background: var(--surface-3);
-  border-color: rgba(242, 169, 59, 0.4);
+  background: var(--signal-dim);
+  border-color: var(--signal);
+  color: var(--signal);
+  box-shadow: 0 0 20px rgba(199,255,74,.08);
 }
 .shock-btn.active {
   border-color: var(--amber);
   background: var(--amber-dim);
   color: var(--text);
 }
+.shock-btn:focus-visible { outline:2px solid var(--signal); outline-offset:3px; }
+.log-mark { display:inline-grid; place-items:center; width:15px; height:15px; margin-right:4px; border:1px solid currentColor; border-radius:50%; font-weight:700; }
 
 .shock-telemetry-screen {
   background: #08090b;

@@ -1399,14 +1399,14 @@ function triggerMarketShock(type) {
 
     telem.innerHTML = `
       <div>
-        <div class="shock-log-line log-amber">⚠️ MARKET SHOCK DETECTED: Agentic AI Explosion (2026 Shift)</div>
+        <div class="shock-log-line log-amber"><span class="log-mark">!</span> MARKET SHOCK DETECTED: Agentic AI Explosion (2026 Shift)</div>
         <div class="shock-log-line log-cyan">• Industry Benchmark updated: Agent Tool Calling & Cognitive Loops threshold raised to Level 4.</div>
         <div class="shock-log-line log-muted">• Aarav's verified fit adjusted: 30.9% → 22.4% (Relative Drift: -8.5%).</div>
         <div class="shock-log-line log-green">• MENTOR INTERVENTION: Emergency Shock Absorption Protocol active.</div>
         <div class="shock-log-line log-green">• Injected 16h "Agent Tool Calling & Multi-Agent Loops" into Sprint 1.</div>
       </div>
       <div class="shock-log-line log-amber" style="border-top: 1px solid var(--line); padding-top: 8px;">
-        ⚡ Emergency Curriculum Mutation Deployed: Candidate protected from technological obsolescence.
+        <span class="log-mark">+</span> Emergency Curriculum Mutation Deployed: Candidate protected from technological obsolescence.
       </div>
     `;
 
@@ -1444,12 +1444,12 @@ function triggerMarketShock(type) {
 
     telem.innerHTML = `
       <div>
-        <div class="shock-log-line log-amber">⚠️ MARKET SHOCK DETECTED: Enterprise Cloud-Native Mandate</div>
+        <div class="shock-log-line log-amber"><span class="log-mark">!</span> MARKET SHOCK DETECTED: Enterprise Cloud-Native Mandate</div>
         <div class="shock-log-line log-cyan">• Benchmark updated: Docker & Kubernetes containerization mandatory for all candidates.</div>
         <div class="shock-log-line log-green">• MENTOR INTERVENTION: Re-sequenced Sprint 2 to prioritize Docker Containerization.</div>
       </div>
       <div class="shock-log-line log-amber" style="border-top: 1px solid var(--line); padding-top: 8px;">
-        ⚡ Enterprise Policy Enforced across candidate syllabus.
+        <span class="log-mark">+</span> Enterprise Policy Enforced across candidate syllabus.
       </div>
     `;
     ticker("Mentor agent: Cloud mandate absorbed · Prerequisite priority shifted.");
