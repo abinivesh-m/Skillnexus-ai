@@ -3,6 +3,12 @@
 
 Live application: **https://skillnexus-ai.vercel.app**
 
+**Chosen vertical:** Education and Workforce Development / Personalized Learning
+
+**Approach:** SkillNexus profiles a learner, separates claimed skills from demonstrated skills, compares verified capability against a target role, recommends prerequisite-sequenced resources, and adapts the roadmap after assessments or career-goal changes.
+
+**Key assumption:** readiness arithmetic must remain explainable and deterministic. Gemini generates questions and mentor language, but never invents readiness scores, gap severity, time estimates, or career recommendations.
+
 ## Judge quickstart
 
 1. Open the live application.
