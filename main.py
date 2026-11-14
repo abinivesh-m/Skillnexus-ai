@@ -29,6 +29,9 @@ from agents import (
     MentorAgent,
     AgentHandoffLog
 )
+import ai
+
+HOURS_PER_WEEK = 8
 
 BASE_DIR = Path(__file__).parent
 STATIC_DIR = BASE_DIR / "static"
@@ -52,11 +55,46 @@ class GradeAssessmentRequest(BaseModel):
     answers: List[int]
     current_modules: List[Dict[str, Any]]
     target_role_id: str
+    level: int = 3
+    concept_question: Optional[str] = None
+    concept_answer: Optional[str] = None
 
 class GoalSwitchRequest(BaseModel):
     learner_id: str
     new_role_id: str
     current_skills: Optional[List[Dict[str, Any]]] = None
+
+class ConceptRequest(BaseModel):
+    skill: str
+    question: str
+    answer: str
+    claimed: int = 3
+    required: int = 4
+
+class MentorRequest(BaseModel):
+    skill: str
+    score: int
+    module: str
+    hours: int
+    before: float = 0
+    after: float = 0
+    weeks_before: int = 0
+    weeks_after: int = 0
+
+# ---------------------------------------------------------------------------
+# Question resolution: curated bank -> Gemini-generated -> honest general probe
+# ---------------------------------------------------------------------------
+def resolve_questions(skill: str, level: int = 3):
+    assessor = AssessorAgent()
+    curated = assessor.ASSESSMENT_BANKS.get(skill)
+    if curated:
+        return curated, "curated"
+
+    generated, source = ai.generate_questions(skill, level)
+    if generated:
+        return generated, source
+
+    return assessor.general_probe(skill), "general-probe"
 
 # ---------------------------------------------------------------------------
 # API Endpoints
@@ -74,7 +112,8 @@ def health_check():
             "AssessorAgent",
             "MentorAgent"
         ],
-        "engine": "Deterministic Euclidean Metric + Adaptive Re-Plan"
+        "engine": "Deterministic weighted-competency metric + adaptive re-plan",
+        "ai": ai.status(),
     }
 
 @app.get("/api/roles")
@@ -122,6 +161,9 @@ def orchestrate_pipeline(req: OrchestrateRequest):
     modules_with_res, log4 = resource_agent.execute(modules)
     logs.append(log4.to_dict())
 
+    total_hours = sum(int(m.get("hours", 0)) for m in modules_with_res)
+    weeks = max(1, -(-total_hours // HOURS_PER_WEEK))
+
     return {
         "learner": learner,
         "target_role": role.dict(),
@@ -129,13 +171,30 @@ def orchestrate_pipeline(req: OrchestrateRequest):
         "metrics": metrics.dict(),
         "gaps": [g.dict() for g in gaps],
         "roadmap": modules_with_res,
-        "agent_logs": logs
+        "agent_logs": logs,
+        "plan": {
+            "total_hours": total_hours,
+            "hours_per_week": HOURS_PER_WEEK,
+            "weeks": weeks,
+        },
     }
 
 @app.get("/api/assessment/{skill}")
-def get_assessment(skill: str):
-    assessor = AssessorAgent()
-    return assessor.get_assessment(skill)
+def get_assessment(skill: str, level: int = 3):
+    """
+    Question resolution order:
+      1. Curated expert bank (JavaScript, React)
+      2. Gemini-generated diagnostic for this exact skill (33 benchmark skills)
+      3. Honest general engineering probe, clearly labelled
+    """
+    questions, source = resolve_questions(skill, level)
+    return {
+        "skill": skill,
+        "source": source,
+        "ai_generated": source.startswith("gemini"),
+        "total_questions": len(questions),
+        "questions": questions,
+    }
 
 @app.post("/api/assessment/grade")
 def grade_assessment(req: GradeAssessmentRequest):
@@ -143,8 +202,21 @@ def grade_assessment(req: GradeAssessmentRequest):
     Grades assessment, updates verified skill status, and triggers
     Adaptive Re-plan via MentorAgent if the learner struggles!
     """
+    questions, question_source = resolve_questions(req.skill, req.level)
     assessor = AssessorAgent()
-    grade_result = assessor.grade_assessment(req.skill, req.answers)
+    grade_result = assessor.grade_with(questions, req.skill, req.answers)
+    grade_result["question_source"] = question_source
+
+    # Optional free-text probe, graded against an explicit rubric by Gemini.
+    concept_grade = None
+    if req.concept_answer and req.concept_question:
+        concept_grade = ai.grade_concept(
+            skill=req.skill,
+            question=req.concept_question,
+            answer=req.concept_answer,
+            claimed=max((s.get("claimed_level", 3) for s in (get_learner_by_id(req.learner_id) or {}).get("skills", []) if s.get("skill", "").lower() == req.skill.lower()), default=3),
+            required=req.level,
+        )
 
     role = get_role_by_id(req.target_role_id)
     if not role:
@@ -152,6 +224,10 @@ def grade_assessment(req: GradeAssessmentRequest):
 
     learner = get_learner_by_id(req.learner_id) or {"skills": []}
     learner_skills = learner.get("skills", [])
+
+    current_hours = sum(int(m.get("hours", 0)) for m in req.current_modules)
+    weeks_before = max(1, -(-current_hours // HOURS_PER_WEEK))
+    ready_now = GapAgent().execute({"skills": learner_skills}, role)[0].verified_readiness
 
     mentor = MentorAgent()
     logs = []
@@ -166,18 +242,39 @@ def grade_assessment(req: GradeAssessmentRequest):
         )
         logs.append(mentor_log.to_dict())
 
+        new_hours = sum(int(m.get("hours", 0)) for m in new_modules)
+        weeks_after = max(1, -(-new_hours // HOURS_PER_WEEK))
+
+        narrative, narrative_source = ai.mentor_narrative({
+            "skill": req.skill,
+            "score": grade_result["percentage"],
+            "module": diff_summary["added_modules"][0] if diff_summary["added_modules"] else "a remedial sprint",
+            "hours": diff_summary["additional_hours"],
+            "weeks_before": weeks_before,
+            "weeks_after": weeks_after,
+            "readiness_now": ready_now,
+        })
+        diff_summary["mentor_narrative"] = narrative
+        diff_summary["narrative_source"] = narrative_source
+        diff_summary["weeks_before"] = weeks_before
+        diff_summary["weeks_after"] = weeks_after
+        diff_summary["readiness_now"] = ready_now
+
         return {
             "grade_result": grade_result,
+            "concept_grade": concept_grade,
             "adaptive_replan": True,
             "diff_summary": diff_summary,
             "updated_roadmap": new_modules,
+            "plan": {"total_hours": new_hours, "hours_per_week": HOURS_PER_WEEK, "weeks": weeks_after},
             "agent_logs": logs
         }
     else:
-        # Learner passed! Upgrade verified level
+        # Learner passed: verified level is derived from the score, not assumed.
+        new_level = 4 if grade_result["percentage"] >= 85 else 3
         for s in learner_skills:
             if s["skill"].lower() == req.skill.lower():
-                s["verified_level"] = max(s.get("verified_level", 0), 3)
+                s["verified_level"] = max(s.get("verified_level", 0), new_level)
                 s["status"] = "verified"
 
         # Recalculate deterministic metrics
@@ -194,29 +291,37 @@ def grade_assessment(req: GradeAssessmentRequest):
                 copied["diff_type"] = "mastered"
             updated_modules.append(copied)
 
+        hours_after = sum(int(m.get("hours", 0)) for m in updated_modules if m.get("status") != "completed")
+        weeks_after = max(1, -(-hours_after // HOURS_PER_WEEK))
+
         diff_summary = {
             "action": "SKILL_VERIFIED",
-            "trigger": f"Passed {req.skill} assessment with {grade_result['percentage']}%",
+            "trigger": f"Passed {req.skill} check-in with {grade_result['percentage']}%",
             "added_modules": [],
             "shifted_modules": [],
             "additional_hours": 0,
-            "reason": f"Mastery validated. Verified level increased, raising overall readiness.",
-            "mentor_narrative": f"🎉 Skill Verified! Demonstrated strong comprehension in {req.skill}. Overall readiness updated to {new_metrics.verified_readiness}%."
+            "reason": f"Mastery validated at level {new_level}/5. Verified readiness recalculated deterministically.",
+            "mentor_narrative": f"Verified level for {req.skill} raised to {new_level}/5. Verified readiness is now {new_metrics.verified_readiness}% and {hours_after} hours of planned work remain.",
+            "narrative_source": "deterministic",
+            "weeks_before": weeks_before,
+            "weeks_after": weeks_after,
         }
 
         mentor_log = AgentHandoffLog(
             agent_name=mentor.name,
             target_agent="Learner UI",
-            summary=f"Skill verified: {req.skill} · Readiness surged to {new_metrics.verified_readiness}%"
+            summary=f"Skill verified: {req.skill} · Readiness recalculated to {new_metrics.verified_readiness}%"
         )
         logs.append(mentor_log.to_dict())
 
         return {
             "grade_result": grade_result,
+            "concept_grade": concept_grade,
             "adaptive_replan": False,
             "diff_summary": diff_summary,
             "new_metrics": new_metrics.dict(),
             "updated_roadmap": updated_modules,
+            "plan": {"total_hours": hours_after, "hours_per_week": HOURS_PER_WEEK, "weeks": weeks_after},
             "agent_logs": logs
         }
 
@@ -246,6 +351,32 @@ def switch_goal(req: GoalSwitchRequest):
         "diff_summary": diff_summary,
         "agent_logs": [l.to_dict() for l in logs]
     }
+
+# ---------------------------------------------------------------------------
+# Gemini layer: status, audit trail, rubric grading, mentor narrative
+# ---------------------------------------------------------------------------
+@app.get("/api/ai/status")
+def ai_status():
+    return ai.status()
+
+@app.get("/api/ai/audit")
+def ai_audit():
+    return {"calls": ai.audit_log()}
+
+@app.post("/api/ai/grade-concept")
+def ai_grade_concept(req: ConceptRequest):
+    return ai.grade_concept(
+        skill=req.skill,
+        question=req.question,
+        answer=req.answer,
+        claimed=req.claimed,
+        required=req.required,
+    )
+
+@app.post("/api/ai/mentor")
+def ai_mentor(req: MentorRequest):
+    text, source = ai.mentor_narrative(req.dict())
+    return {"narrative": text, "source": source}
 
 # ---------------------------------------------------------------------------
 # Static File Hosting

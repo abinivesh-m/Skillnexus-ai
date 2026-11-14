@@ -378,8 +378,50 @@ class AssessorAgent:
             "questions": questions
         }
 
-    def grade_assessment(self, skill: str, answers: List[int]) -> Dict[str, Any]:
-        questions = self.ASSESSMENT_BANKS.get(skill, self.ASSESSMENT_BANKS["JavaScript"])
+    GENERAL_PROBE = [
+        {
+            "id": "q-gen-1",
+            "question": "A function that works in isolation fails once called 10,000 times. What is the most likely class of defect?",
+            "options": [
+                "A shared mutable state or resource leak that compounds across calls",
+                "A syntax error that only appears at scale",
+                "The compiler optimising the function incorrectly",
+                "The function returning a value of the wrong type"
+            ],
+            "correct_index": 0,
+            "explanation": "Failures that only appear under repetition almost always trace to state that survives between calls: shared caches, unclosed handles, or mutated module-level objects."
+        },
+        {
+            "id": "q-gen-2",
+            "question": "You must choose where to validate untrusted input. Which boundary is correct?",
+            "options": [
+                "At the outermost edge where data enters the system, before any processing",
+                "Inside every helper function that touches the data",
+                "Only in the database layer, as the last line of defence",
+                "Wherever the first bug is reported"
+            ],
+            "correct_index": 0,
+            "explanation": "Trust boundaries belong at the perimeter. Validating once at entry keeps one authoritative check instead of scattering partial checks that drift apart."
+        },
+        {
+            "id": "q-gen-3",
+            "question": "A system is slow only for 5% of requests, at unpredictable times. What should you measure first?",
+            "options": [
+                "Tail latency (p95/p99) and where those requests spend time",
+                "The average response time across all requests",
+                "CPU utilisation of the machine at idle",
+                "The total number of lines of code executed"
+            ],
+            "correct_index": 0,
+            "explanation": "Averages hide tail behaviour. Intermittent slowness lives in the p95/p99 tail, so you trace the slow minority rather than the mean."
+        }
+    ]
+
+    def general_probe(self, skill: str) -> List[Dict[str, Any]]:
+        """Skill-agnostic reasoning questions, used only when the AI layer is offline."""
+        return self.GENERAL_PROBE
+
+    def grade_with(self, questions: List[Dict[str, Any]], skill: str, answers: List[int]) -> Dict[str, Any]:
         score = 0
         details = []
 
@@ -397,17 +439,20 @@ class AssessorAgent:
                 "explanation": q["explanation"]
             })
 
-        percentage = round((score / len(questions)) * 100)
-        passed = percentage >= 66
+        percentage = round((score / len(questions)) * 100) if questions else 0
 
         return {
             "skill": skill,
             "score": score,
             "total": len(questions),
             "percentage": percentage,
-            "passed": passed,
+            "passed": percentage >= 66,
             "details": details
         }
+
+    def grade_assessment(self, skill: str, answers: List[int]) -> Dict[str, Any]:
+        questions = self.ASSESSMENT_BANKS.get(skill, self.ASSESSMENT_BANKS["JavaScript"])
+        return self.grade_with(questions, skill, answers)
 
 # =====================================================================
 # AGENT 6: Mentor Agent (The Adaptive Engine)

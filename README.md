@@ -1,17 +1,20 @@
-# SkillNexus-AI 🎓⚡
-### Autonomous Multi-Agent Career & Skill Orchestration Platform
-*Enterprise-Grade Adaptive Upskilling Architecture with Deterministic Euclidean Readiness Analytics*
+﻿# SkillNexus-AI
+### Verified skill gaps. Computed career paths. Adaptive learning plans.
+
+Live application: **https://skillnexus-ai.vercel.app**
+
+SkillNexus-AI is a multi-agent career-planning platform for identifying the difference between what a learner claims and what they can demonstrate. It audits a learner profile, benchmarks it against a target role, tests uncertain skills, and rewrites the learning path when evidence changes.
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python)](https://python.org)
 [![Multi-Agent Swarm](https://img.shields.io/badge/Architecture-6%20Specialized%20Agents-f59e0b?style=flat)]()
-[![Deterministic Math](https://img.shields.io/badge/Readiness%20Engine-Euclidean%20Verified%20Math-10b981?style=flat)]()
+[![Deterministic Math](https://img.shields.io/badge/Readiness%20Engine-Weighted%20Verified%20Math-10b981?style=flat)]()
 [![Repository Footprint](https://img.shields.io/badge/Repo%20Size-%3C%201%20MB-blue)]()
 [![Production Status](https://img.shields.io/badge/Production-Live%20Deploy-06b6d4?logo=vercel)](https://skillnexus-ai.vercel.app)
 
 ---
 
-## 📸 System Interface Preview
+## System Interface Preview
 
 ![SkillNexus Interactive Interface](docs/assets/dashboard_preview.svg)
 
@@ -59,7 +62,7 @@ sequenceDiagram
     Candidate->>UI: Selects Profile (Aarav Patel · Target: Full Stack)
     UI->>Profile: Audit credentials & normalize skill schemas
     Profile-->>Gap: 8 skills audited (3 verified, 5 unverified/missing)
-    Gap->>Gap: Compute Euclidean readiness metrics (30.9% fit)
+    Gap->>Gap: Compute weighted readiness metrics (30.9% fit)
     Gap-->>Curr: 5 prioritized gaps ranked by severity
     Curr->>Curr: Sequence DAG modules (Prerequisite constraints enforced)
     Curr-->>Res: 6 sequential sprints structured (118h total investment)
@@ -78,7 +81,7 @@ sequenceDiagram
 
 ## 3. Mathematical Foundations & Deterministic Scoring
 
-To prevent hallucinations common in purely generative systems, all readiness scores and gap prioritizations are governed by **deterministic Euclidean mathematics**:
+To prevent hallucinations common in purely generative systems, all readiness scores and gap prioritizations are governed by **deterministic weighted mathematics**:
 
 ### Verified Readiness Formula
 $$\text{Readiness}_{\text{verified}} = \left( \frac{\sum_{i=1}^{N} \min(L_{\text{verified}, i}, R_i) \times W_i}{\sum_{i=1}^{N} R_i \times W_i} \right) \times 100$$
@@ -136,7 +139,7 @@ Skillnexus-ai/
 ├── .gitignore                      # Strict VCS exclusion rules
 ├── README.md                       # Architectural specification & technical documentation
 ├── main.py                         # FastAPI orchestration backend & REST routing
-├── domain.py                       # Deterministic Euclidean mathematics & data models
+├── domain.py                       # deterministic weighted mathematics & data models
 ├── agents.py                       # 6 specialized collaborating agents & event handoff bus
 ├── requirements.txt                # Lean runtime dependencies
 ├── vercel.json                     # Serverless production deployment configuration
@@ -151,7 +154,7 @@ Skillnexus-ai/
 ├── static/
 │   ├── index.html                  # Semantic, accessible reactive workspace structure
 │   ├── style.css                   # Cybernetic dark-mode design system & amber diff styling
-│   └── app.js                      # Persistent 3D canvas galaxy, simulation model & state
+│   └── app.js                      # Persistent 3D interactive competency graph, simulation model & state
 └── tests/
     └── test_domain_and_agents.py   # Unit & integration regression test suite
 ```
@@ -196,3 +199,5 @@ Access the application workspace at **[http://localhost:8000](http://localhost:8
 
 ---
 *SkillNexus-AI — Autonomous Career & Skill Orchestration Engine.*
+
+

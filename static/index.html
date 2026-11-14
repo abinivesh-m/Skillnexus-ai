@@ -3,236 +3,277 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SkillNexus-AI — Autonomous Multi-Agent Career & Skill Orchestration Platform</title>
+  <title>SkillNexus — verified skills, computed paths</title>
+  <meta name="description" content="Six agents verify what a learner actually knows, compute the weighted gap to a target role, and rewrite the path when they fail a check-in.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;450;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-  <!-- Full-Viewport Persistent 3D Interactive Skill Constellation Canvas -->
-  <canvas id="bg3DCanvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0;"></canvas>
+  <canvas id="bg3DCanvas" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
 
-  <!-- Site Header -->
-  <header class="site-header" style="position: sticky; top: 0; z-index: 50;">
-    <div class="header-container">
-      <div class="brand-section">
-        <div class="brand-logo-gem">⚡</div>
-        <div>
-          <h1 class="brand-title">SkillNexus.ai</h1>
-        </div>
-        <span class="brand-tag">Autonomous Multi-Agent Swarm</span>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M12 2.5 3.5 7v10L12 21.5 20.5 17V7L12 2.5Z"/>
+          <circle cx="12" cy="12" r="2.6"/>
+          <path d="M12 2.5v6.9M12 14.6v6.9M3.5 7l6 3.4M14.5 13.6l6 3.4M20.5 7l-6 3.4M9.5 13.6l-6 3.4" opacity=".45"/>
+        </svg>
+        <span class="brand-name">SkillNexus</span>
+        <span class="brand-slash">/</span>
+        <span class="brand-sub">competency engine</span>
       </div>
 
-      <div class="header-actions">
-        <!-- 10-Second Judge Tour (The Signature Hook) -->
-        <button class="btn btn-cyber-tour" id="btnAutoTour" onclick="play10SecondTour()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          ▶ 10s Signature Demo
+      <div class="topbar-actions">
+        <span class="ai-pill" id="aiStatusPill" title="Model status">
+          <span class="dot dot-idle" id="aiDot"></span>
+          <span id="aiStatusText">checking model</span>
+        </span>
+        <button class="btn btn-quiet hide-sm" id="btnAutoTour" onclick="play10SecondTour()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Run 10s demo
         </button>
-
-        <!-- Prompt Scenario Preset -->
-        <button class="btn btn-glass" onclick="loadLearnerPreset('aarav-patel')">
-          ★ Prompt: Aarav Patel
-        </button>
-
-        <!-- Switch Career Goal -->
-        <button class="btn btn-glass" onclick="quickSwitchGoal('ai-ml-engineer')">
-          Shift: AI Engineer
-        </button>
-
-        <!-- Live Diagnostic -->
-        <button class="btn btn-cyber-primary" onclick="openAssessmentModal('JavaScript')">
-          ⚡ Diagnostic Check-in
-        </button>
+        <button class="btn btn-solid" onclick="openAssessmentModal('JavaScript')">Start check-in</button>
       </div>
     </div>
   </header>
 
-  <!-- Agent Telemetry Bar -->
-  <section class="telemetry-bar">
-    <div class="telemetry-chips">
-      <div class="agent-chip active" id="chip-ProfileAgent"><span class="pulse-dot"></span> Profile Agent</div>
-      <div class="agent-chip" id="chip-GapAgent"><span class="pulse-dot"></span> Gap Agent</div>
-      <div class="agent-chip" id="chip-CurriculumAgent"><span class="pulse-dot"></span> Curriculum Agent</div>
-      <div class="agent-chip" id="chip-ResourceAgent"><span class="pulse-dot"></span> Resource Agent</div>
-      <div class="agent-chip" id="chip-AssessorAgent"><span class="pulse-dot"></span> Assessor Agent</div>
-      <div class="agent-chip" id="chip-MentorAgent"><span class="pulse-dot"></span> Mentor Agent</div>
-    </div>
+  <div class="shell">
 
-    <div class="telemetry-ticker">
-      <span>TELEMETRY:</span>
-      <span id="tickerMessage">Multi-agent swarm calibrated. 3D Gyroscope & Quantum Simulation ready.</span>
-    </div>
-  </section>
-
-  <!-- Hero 3D Gyroscope & What-If Simulation HUD -->
-  <section class="hero-stage">
-    <div class="hero-viewport-3d">
-      <div class="hero-overlay-text">
-        <span class="hero-eyebrow">The 10-Second Insight</span>
-        <h2 class="hero-title">Self-Reported Resumes Are Broken. <span>We Compute Verified Fit.</span></h2>
-        <p class="hero-sub">
-          A static course list doesn't win careers. Toggle <strong>"What if I master React?"</strong> below and watch the computational model recalculate readiness, prune prerequisite weeks, and restructure sprints live.
+    <!-- ── Stage ─────────────────────────────────────────────────────────── -->
+    <section class="stage">
+      <div class="stage-copy">
+        <p class="eyebrow"><span class="tick"></span>Multi-agent competency engine</p>
+        <h1>Resumes claim.<br><em>We verify.</em></h1>
+        <p class="lede">
+          Six agents audit a learner's profile, test what they actually know, and rewrite the
+          path to their target role. Every recommendation traces back to the arithmetic behind it.
         </p>
-        <div style="display: flex; gap: 0.6rem;">
-          <button class="btn btn-glass" onclick="toggleSimulateSkill('React')" style="border-color: var(--neon-cyan); color: var(--neon-cyan);">
-            ⚡ Flip "What If: React"
+        <div class="stage-actions">
+          <button class="btn btn-outline" onclick="toggleSimulateSkill('React')" data-whatif>
+            What if I learn React?
           </button>
-          <button class="btn btn-glass" onclick="resetSimulations()">
-            ↺ Reset Baseline
+          <button class="btn btn-quiet" onclick="resetSimulations()">Reset</button>
+        </div>
+        <dl class="facts">
+          <div><dt>Benchmark roles</dt><dd>6</dd></div>
+          <div><dt>Tracked skills</dt><dd>33</dd></div>
+          <div><dt>Scoring</dt><dd>Deterministic</dd></div>
+        </dl>
+      </div>
+
+      <div class="stage-readout">
+        <div class="readout-head">
+          <span>Verified readiness</span>
+          <span class="readout-target" id="readoutTarget">Full Stack Developer</span>
+        </div>
+
+        <div class="readout-value">
+          <span id="hudVerifiedScore">30.9</span><span class="pct">%</span>
+          <span class="band" id="uncertaintyVal" title="Estimation band narrows as more skills are verified">±7</span>
+        </div>
+        <div class="meter"><div class="meter-fill" id="hudVerifiedFill"></div></div>
+
+        <div class="readout-rows">
+          <div class="rrow">
+            <span>Self-reported</span>
+            <span class="rv muted" id="hudClaimedScore">53.6%</span>
+          </div>
+          <div class="rrow">
+            <span>Credibility delta</span>
+            <span class="rv amber" id="hudDeltaScore">-22.7%</span>
+          </div>
+          <div class="rrow">
+            <span>Time to target <i id="planWeeksNote">at 8 hrs/week</i></span>
+            <span class="rv" id="hudTimeEst">13 weeks</span>
+          </div>
+        </div>
+
+        <div class="readout-foot">
+          <button class="link-btn" id="explainBtn" onclick="openExplainModal()">
+            Explain this number
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"/></svg>
           </button>
+          <span class="save-tag" id="hudSavingsTag" style="display:none">0 weeks saved</span>
+        </div>
+
+        <div class="gyro-wrap">
+          <canvas id="skillGyroCanvas" width="300" height="170"></canvas>
+          <span class="gyro-cap">skill graph · live</span>
         </div>
       </div>
 
-      <!-- 3D Gyroscope Canvas -->
-      <div class="canvas-3d-wrap">
-        <canvas id="skillGyroCanvas" width="320" height="190"></canvas>
+      <div class="graph-hud" aria-label="Interactive skill graph legend">
+        <div class="graph-hud-head">
+          <span class="graph-hud-kicker"><i class="live-ring"></i>Live competency map</span>
+          <span class="graph-hud-hint">drag to rotate · click a node to check in</span>
+        </div>
+        <div class="graph-legend">
+          <span><i class="graph-key key-verified"></i>verified</span>
+          <span><i class="graph-key key-partial"></i>partial</span>
+          <span><i class="graph-key key-claimed"></i>claimed</span>
+          <span><i class="graph-key key-missing"></i>missing</span>
+        </div>
       </div>
-    </div>
+      <div class="graph-tooltip" id="graphTooltip" role="status" aria-live="polite"></div>
+    </section>
 
-    <!-- Quantum Simulation HUD -->
-    <div class="simulation-hud-card">
+    <!-- ── Agent strip ───────────────────────────────────────────────────── -->
+    <section class="agent-strip">
+      <div class="agents" id="agentChips">
+        <span class="agent-chip active" id="chip-ProfileAgent"><i class="pulse-dot"></i>Profile</span>
+        <span class="agent-chip" id="chip-GapAgent"><i class="pulse-dot"></i>Gap</span>
+        <span class="agent-chip" id="chip-CurriculumAgent"><i class="pulse-dot"></i>Curriculum</span>
+        <span class="agent-chip" id="chip-ResourceAgent"><i class="pulse-dot"></i>Resource</span>
+        <span class="agent-chip" id="chip-AssessorAgent"><i class="pulse-dot"></i>Assessor</span>
+        <span class="agent-chip" id="chip-MentorAgent"><i class="pulse-dot"></i>Mentor</span>
+      </div>
+      <div class="ticker">
+        <span class="ticker-label">handoff</span>
+        <span id="tickerMessage">Swarm calibrated. Awaiting first orchestration pass.</span>
+      </div>
+    </section>
+
+    <!-- ── Workspace ─────────────────────────────────────────────────────── -->
+    <main class="workspace">
+
+      <!-- Profile -->
+      <aside class="panel" id="panelLearner">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">Learner</h2>
+            <p class="panel-sub">Claimed vs verified</p>
+          </div>
+          <span class="chip chip-signal" id="auditSummaryBadge">Audited</span>
+        </div>
+
+        <label class="field-label" for="learnerSelect">Active profile</label>
+        <select class="select" id="learnerSelect" onchange="onLearnerChange(this.value)">
+          <option value="aarav-patel">Aarav Patel — student, full stack</option>
+          <option value="priya-sharma">Priya Sharma — analyst, AI/ML</option>
+          <option value="rohan-gupta">Rohan Gupta — sysadmin, cloud</option>
+        </select>
+
+        <div class="learner-card">
+          <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Aarav" alt="" class="learner-avatar" id="learnerAvatar">
+          <div>
+            <h3 id="learnerName">Aarav Patel</h3>
+            <p id="learnerHeadline">CS undergraduate</p>
+          </div>
+        </div>
+
+        <label class="field-label" for="roleSelect">Target role</label>
+        <select class="select" id="roleSelect" onchange="onRoleChange(this.value)"></select>
+
+        <div class="matrix-head">
+          <span>Skill matrix</span>
+          <span class="matrix-legend"><i class="key verified"></i>verified <i class="key claimed"></i>claimed</span>
+        </div>
+        <div id="skillMatrixList" class="skill-matrix"></div>
+      </aside>
+
+      <!-- Gaps -->
+      <section class="panel" id="panelGaps">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">Gaps</h2>
+            <p class="panel-sub">Ranked by weighted severity</p>
+          </div>
+          <span class="chip" id="gapCountBadge">0</span>
+        </div>
+        <div class="gap-stack" id="gapSimulationStack"></div>
+      </section>
+
+      <!-- Roadmap -->
+      <section class="panel panel-roadmap" id="panelRoadmap">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">Roadmap</h2>
+            <p class="panel-sub">Prerequisite-sequenced sprints</p>
+          </div>
+          <button class="btn btn-quiet btn-xs" onclick="openAssessmentModal('JavaScript')">Trigger re-plan</button>
+        </div>
+
+        <div class="diff-banner" id="diffBanner" style="display:none">
+          <div class="diff-top">
+            <span class="diff-label">Re-plan applied</span>
+            <span class="diff-source" id="diffSource"></span>
+          </div>
+          <p class="diff-title" id="diffTitle">Adaptive re-plan triggered</p>
+          <p class="diff-narrative" id="diffNarrative"></p>
+        </div>
+
+        <div class="roadmap" id="roadmapTimeline"></div>
+      </section>
+
+    </main>
+
+    <footer class="foot">
       <div>
-        <div class="hud-metric-row">
-          <span class="hud-metric-label">Verified Readiness</span>
-          <span class="hud-metric-val val-cyan" id="hudVerifiedScore">30.9%</span>
-        </div>
-        <div class="hud-bar-track">
-          <div class="hud-bar-fill" id="hudVerifiedFill" style="width: 30.9%;"></div>
-        </div>
+        <span class="foot-strong">Readiness</span> = Σ min(verified, required) × weight ÷ Σ required × weight × 100.
+        Computed, never generated.
+      </div>
+      <div class="foot-right">
+        <span id="footModel">gemini-3.5-flash-lite</span>
+        <span class="sep">·</span>
+        <span id="footCalls">0 AI calls</span>
+        <span class="sep">·</span>
+        <span>PromptWars × RTC</span>
+      </div>
+    </footer>
+  </div>
 
-        <div class="hud-metric-row">
-          <span class="hud-metric-label">Self-Reported Claimed</span>
-          <span class="hud-metric-val val-amber" id="hudClaimedScore">53.6%</span>
+  <!-- ── Check-in modal ──────────────────────────────────────────────────── -->
+  <div class="modal" id="assessmentModal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <p class="modal-eyebrow">Assessor agent · diagnostic</p>
+          <h3>Check-in: <span id="modalSkillName">JavaScript</span></h3>
+          <p class="modal-sub" id="quizSourceNote">Three questions. Passing raises your verified level.</p>
         </div>
-
-        <div class="hud-metric-row" style="margin-top: 0.4rem;">
-          <span class="hud-metric-label">Credibility Delta</span>
-          <span class="hud-metric-val val-rose" id="hudDeltaScore" style="font-size: 1.25rem;">-22.7%</span>
-        </div>
+        <button class="icon-btn" onclick="closeAssessmentModal()" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 5l14 14M19 5L5 19"/></svg>
+        </button>
       </div>
 
-      <div style="border-top: 1px solid var(--glass-border); padding-top: 0.65rem; display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Time to Enterprise Ready</span>
-          <strong id="hudTimeEst" style="font-family: var(--font-mono); font-size: 0.95rem; color: var(--neon-cyan);">18 Weeks</strong>
+      <div class="modal-body" id="quizQuestionsContainer"></div>
+
+      <div class="concept-block">
+        <p class="field-label">Optional · rubric-graded by the mentor agent</p>
+        <p class="concept-q" id="conceptQuestion">Explain how you would use this skill in a real project, and one failure mode you would guard against.</p>
+        <textarea class="concept-input" id="conceptInput" rows="3" placeholder="Two or three sentences. A vague answer will score below 60."></textarea>
+        <div class="rubric" id="rubricResult"></div>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-danger-quiet" onclick="simulateFailedAssessment()">Simulate weakness</button>
+        <div class="modal-foot-right">
+          <button class="btn btn-quiet" onclick="closeAssessmentModal()">Cancel</button>
+          <button class="btn btn-solid" onclick="submitAssessmentAnswers()">Submit and grade</button>
         </div>
-        <span class="badge-pill badge-verified" id="hudSavingsTag" style="display: none;">-6 Weeks Saved!</span>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- Main 3-Column Workspace -->
-  <main class="workspace-grid">
-
-    <!-- Column 1: Candidate Dossier -->
-    <aside class="glass-panel" id="panelLearner">
-      <div class="panel-head">
+  <!-- ── Explain modal ───────────────────────────────────────────────────── -->
+  <div class="modal" id="explainModal" role="dialog" aria-modal="true">
+    <div class="modal-card modal-card-wide">
+      <div class="modal-head">
         <div>
-          <h3 class="panel-title">Learner Profile</h3>
-          <span class="panel-sub">Audited Credentials vs Claims</span>
+          <p class="modal-eyebrow">Transparency</p>
+          <h3>How this number was computed</h3>
+          <p class="modal-sub">No model is involved in this calculation. Every row below is arithmetic you can check by hand.</p>
         </div>
-        <span class="badge-pill badge-verified" id="auditSummaryBadge">Audited</span>
-      </div>
-
-      <label style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 0.3rem; display: block;">Active Candidate</label>
-      <select class="select-cyber" id="learnerSelect" onchange="onLearnerChange(this.value)">
-        <option value="aarav-patel">Aarav Patel (Student - Targeting Full Stack)</option>
-        <option value="priya-sharma">Priya Sharma (Data Analyst - Targeting AI/ML)</option>
-        <option value="rohan-gupta">Rohan Gupta (Sysadmin - Targeting Cloud)</option>
-      </select>
-
-      <div class="learner-profile-header">
-        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Aarav" alt="Avatar" class="learner-avatar" id="learnerAvatar">
-        <div>
-          <h4 id="learnerName" style="font-size: 0.95rem; font-weight: 700; color: #fff;">Aarav Patel</h4>
-          <p id="learnerHeadline" style="font-size: 0.76rem; color: var(--text-secondary);">CS Undergraduate @ RTC Coimbatore</p>
-        </div>
-      </div>
-
-      <label style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 0.3rem; display: block;">Target Track</label>
-      <select class="select-cyber" id="roleSelect" onchange="onRoleChange(this.value)">
-        <!-- Populated dynamically -->
-      </select>
-
-      <div style="margin-top: 1rem;">
-        <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Claimed vs Verified Matrix</span>
-        <div id="skillMatrixList">
-          <!-- Rendered dynamically -->
-        </div>
-      </div>
-    </aside>
-
-    <!-- Column 2: Prioritized Gaps & What-If Toggles -->
-    <section class="glass-panel" id="panelGaps">
-      <div class="panel-head">
-        <div>
-          <h3 class="panel-title">Skill Gaps & What-If Model</h3>
-          <span class="panel-sub">Flip any toggle to simulate learning impact</span>
-        </div>
-        <span class="badge-pill badge-unverified" id="gapCountBadge">5 Gaps</span>
-      </div>
-
-      <div id="gapSimulationStack">
-        <!-- Rendered dynamically with "What If I Learn This?" Toggles -->
-      </div>
-    </section>
-
-    <!-- Column 3: Adaptive Sequential Roadmap & Re-Plan Diff -->
-    <section class="glass-panel" id="panelRoadmap">
-      <div class="panel-head">
-        <div>
-          <h3 class="panel-title">Adaptive Roadmap</h3>
-          <span class="panel-sub">Prerequisite DAG Sequencing with Curated Resources</span>
-        </div>
-        <button class="btn btn-glass" style="font-size: 0.72rem; padding: 0.25rem 0.55rem;" onclick="openAssessmentModal('JavaScript')">
-          ⚡ Trigger Re-plan
+        <button class="icon-btn" onclick="closeExplainModal()" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 5l14 14M19 5L5 19"/></svg>
         </button>
       </div>
-
-      <!-- Live Adaptive Diff Banner -->
-      <div class="adaptive-diff-amber" id="diffBanner" style="display: none;">
-        <div class="diff-title">
-          <span>⚡</span>
-          <span id="diffTitle">ADAPTIVE RE-PLAN TRIGGERED</span>
-        </div>
-        <p class="diff-narrative" id="diffNarrative">Curriculum rearranged dynamically.</p>
-      </div>
-
-      <!-- Roadmap Timeline -->
-      <div id="roadmapTimeline">
-        <!-- Rendered dynamically -->
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Interactive Check-in Modal -->
-  <div class="modal-overlay" id="assessmentModal">
-    <div class="modal-cyber">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.6rem;">
-        <div>
-          <h3 style="font-size: 1.15rem; color: #fff;">Diagnostic Check-in: <span id="modalSkillName" style="color: var(--neon-cyan);">JavaScript</span></h3>
-          <p style="font-size: 0.78rem; color: var(--text-secondary);">Mentor Agent will rewrite roadmap if fundamental fallacies are identified.</p>
-        </div>
-        <button class="btn btn-glass" style="border: none; font-size: 1.1rem;" onclick="closeAssessmentModal()">✕</button>
-      </div>
-
-      <div id="quizQuestionsContainer">
-        <!-- Dynamic Questions -->
-      </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.4rem; padding-top: 0.8rem; border-top: 1px solid var(--glass-border);">
-        <button class="btn btn-glass" onclick="simulateFailedAssessment()" style="color: var(--neon-rose); border-color: rgba(244, 63, 94, 0.4);">
-          ⚠️ Simulate Weakness (Fail &amp; Adapt)
-        </button>
-        <div style="display: flex; gap: 0.5rem;">
-          <button class="btn btn-glass" onclick="closeAssessmentModal()">Cancel</button>
-          <button class="btn btn-cyber-primary" onclick="submitAssessmentAnswers()">Submit &amp; Grade</button>
-        </div>
-      </div>
+      <div class="modal-body" id="explainBody"></div>
     </div>
   </div>
 

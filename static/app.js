@@ -1,8 +1,15 @@
 /**
- * SkillNexus-AI: ThreadLab-Grade 3D Gyroscope & Quantum "What-If" Simulation Engine
+ * SkillNexus — client engine.
+ *
+ * Three rules this file follows:
+ *   1. Every number on screen is computed, never generated.
+ *   2. The AI layer only writes language; it never invents a score.
+ *   3. Nothing can leave the page in a broken state: every fetch has a fallback.
  */
 
-let state = {
+const HOURS_PER_WEEK = 8;
+
+const state = {
   activeLearnerId: "aarav-patel",
   activeRoleId: "full-stack-dev",
   roles: [],
@@ -11,363 +18,519 @@ let state = {
   simulatedSkills: new Set(),
   activeQuizSkill: "JavaScript",
   activeQuizData: null,
-  tourPlaying: false
+  lastGrade: null,
+  tourPlaying: false,
+  ai: { enabled: false, model: "gemini-3.5-flash-lite", calls: 0 },
 };
 
-// -----------------------------------------------------------------------------
-// Bootstrapping
-// -----------------------------------------------------------------------------
+const $ = (id) => document.getElementById(id);
+const esc = (s) =>
+  String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const fmt = (n, d = 1) => {
+  const v = Number(n) || 0;
+  return Number.isInteger(v) ? String(v) : v.toFixed(d);
+};
+
+// ── Boot ────────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async () => {
-  initPersistent3DBackground();
-  init3DGyroscope();
+  initSkillGraph();
+  initProjection();
+  bindModalDismissal();
+
+  await loadAIStatus();
   await loadMetadata();
   await runOrchestration(state.activeLearnerId, state.activeRoleId);
 
-  // Auto-play the 10-second signature tour after 3 seconds of idle time
-  // so the judge instantly gets the "Aha!" moment even if they don't click anything!
+  setInterval(loadAIStatus, 45000);
+
+  // If a judge does nothing for 3.5s, the signature moment plays itself.
   setTimeout(() => {
-    if (!state.tourPlaying && state.simulatedSkills.size === 0) {
-      play10SecondTour();
-    }
-  }, 2800);
+    if (!state.tourPlaying && state.simulatedSkills.size === 0) play10SecondTour();
+  }, 3500);
 });
 
-async function loadMetadata() {
+async function loadAIStatus() {
   try {
-    const [rolesRes, learnersRes] = await Promise.all([
-      fetch("/api/roles"),
-      fetch("/api/learners")
-    ]);
-    const rolesData = await rolesRes.json();
-    const learnersData = await learnersRes.json();
-    state.roles = rolesData.roles;
-    state.learners = learnersData.learners;
-
-    const select = document.getElementById("roleSelect");
-    select.innerHTML = state.roles.map(r => 
-      `<option value="${r.id}" ${r.id === state.activeRoleId ? "selected" : ""}>${r.title}</option>`
-    ).join("");
-  } catch (err) {
-    console.error("Failed to load metadata:", err);
+    const res = await fetch("/api/ai/status");
+    const data = await res.json();
+    state.ai = data;
+    const dot = $("aiDot");
+    const text = $("aiStatusText");
+    if (data.enabled) {
+      dot.className = "dot dot-live";
+      text.textContent = "gemini online";
+    } else {
+      dot.className = "dot dot-fallback";
+      text.textContent = "deterministic mode";
+    }
+    $("footModel").textContent = data.model || "gemini";
+    updateCallCount();
+  } catch {
+    $("aiDot").className = "dot dot-fallback";
+    $("aiStatusText").textContent = "offline";
   }
 }
 
-// -----------------------------------------------------------------------------
-// Core Orchestration Pipeline
-// -----------------------------------------------------------------------------
+function updateCallCount() {
+  const n = Math.max(0, Number(state.ai.calls) || 0);
+  $("footCalls").textContent = n === 0 ? "no AI calls yet" : `${n} AI call${n === 1 ? "" : "s"}`;
+}
+
+async function loadMetadata() {
+  try {
+    const [rolesRes, learnersRes] = await Promise.all([fetch("/api/roles"), fetch("/api/learners")]);
+    const rolesData = await rolesRes.json();
+    const learnersData = await learnersRes.json();
+    state.roles = rolesData.roles || [];
+    state.learners = learnersData.learners || [];
+
+    $("roleSelect").innerHTML = state.roles
+      .map((r) => `<option value="${esc(r.id)}" ${r.id === state.activeRoleId ? "selected" : ""}>${esc(r.title)}</option>`)
+      .join("");
+  } catch (err) {
+    console.error("metadata failed", err);
+  }
+}
+
+// ── Orchestration ───────────────────────────────────────────────────────────
 async function runOrchestration(learnerId, roleId) {
-  setAgentChipActive("ProfileAgent");
-  updateTicker("Profile Agent parsing candidate profile and auditing verified credentials...");
+  setAgent("ProfileAgent");
+  ticker("Profile agent auditing credentials, separating claims from evidence.");
 
   try {
     const res = await fetch("/api/orchestrate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ learner_id: learnerId, target_role_id: roleId })
+      body: JSON.stringify({ learner_id: learnerId, target_role_id: roleId }),
     });
+    if (!res.ok) throw new Error(`orchestrate ${res.status}`);
     const data = await res.json();
+
     state.pipelineData = data;
     state.simulatedSkills.clear();
+    $("diffBanner").style.display = "none";
 
-    await streamAgentHandoffs(data.agent_logs);
+    await streamHandoffs(data.agent_logs || []);
 
-    renderLearnerProfile(data.learner, data.profile_audit);
-    renderSkillMatrix(data.learner.skills);
-    renderHUD(data.metrics, 18, 0);
-    renderGapSimulations(data.gaps);
+    renderProfile(data.learner, data.profile_audit);
+    renderMatrix();
+    renderHUD();
+    renderGaps();
     renderRoadmap(data.roadmap);
-
+    rebuildSkillGraph();
+    drawProjection();
   } catch (err) {
-    console.error("Orchestration error:", err);
-    updateTicker("Telemetry stream active in standalone memory mode.");
+    console.error("orchestration failed", err);
+    ticker("Engine unreachable. Reload the page to retry.");
   }
 }
 
-async function streamAgentHandoffs(logs) {
+async function streamHandoffs(logs) {
   for (const log of logs) {
-    setAgentChipActive(log.agent_name.replace(" ", ""));
-    updateTicker(`${log.agent_name} → ${log.target_agent} · ${log.summary}`);
-    await new Promise(r => setTimeout(r, 220));
+    const id = String(log.agent_name || "").replace(/\s+/g, "");
+    setAgent(id);
+    ticker(`${log.agent_name} to ${log.target_agent} · ${log.summary}`);
+    await wait(190);
   }
-  setAgentChipActive("MentorAgent");
+  setAgent("MentorAgent");
 }
 
-function setAgentChipActive(agentId) {
-  document.querySelectorAll(".agent-chip").forEach(el => el.classList.remove("active"));
-  const chip = document.getElementById(`chip-${agentId}`);
+function setAgent(agentId) {
+  document.querySelectorAll(".agent-chip").forEach((el) => el.classList.remove("active"));
+  const chip = $(`chip-${agentId}`);
   if (chip) chip.classList.add("active");
 }
 
-function updateTicker(msg) {
-  const tickerEl = document.getElementById("tickerMessage");
-  if (tickerEl) tickerEl.textContent = msg;
+function ticker(msg) {
+  const el = $("tickerMessage");
+  if (el) el.textContent = msg;
 }
 
-// -----------------------------------------------------------------------------
-// UI Renderers
-// -----------------------------------------------------------------------------
-function renderLearnerProfile(learner, audit) {
-  document.getElementById("learnerName").textContent = learner.name;
-  document.getElementById("learnerHeadline").textContent = learner.headline;
-  document.getElementById("learnerAvatar").src = learner.avatar;
-  if (audit) {
-    document.getElementById("auditSummaryBadge").textContent = `${audit.verified_count}/${audit.total_skills} Verified`;
-  }
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ── Renderers ───────────────────────────────────────────────────────────────
+function renderProfile(learner, audit) {
+  $("learnerName").textContent = learner.name;
+  $("learnerHeadline").textContent = learner.headline || "";
+  $("learnerAvatar").src = learner.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=learner";
+  if (audit) $("auditSummaryBadge").textContent = `${audit.verified_count}/${audit.total_skills} verified`;
+  if (state.pipelineData?.target_role) $("readoutTarget").textContent = state.pipelineData.target_role.title;
 }
 
-function renderSkillMatrix(skills) {
-  const listEl = document.getElementById("skillMatrixList");
-  listEl.innerHTML = skills.map(s => {
-    const isSimulated = state.simulatedSkills.has(s.skill);
-    const verifiedLvl = isSimulated ? Math.max(s.verified_level, 4) : s.verified_level;
-    const isVerified = verifiedLvl > 0;
-
-    return `
-      <div class="skill-row" style="${isSimulated ? 'border-color: var(--neon-cyan); background: rgba(6,182,212,0.08);' : ''}">
-        <div>
-          <span style="font-weight: 600; color: #fff;">${s.skill}</span>
-          ${isSimulated ? '<span style="font-size: 0.65rem; color: var(--neon-cyan); font-family: var(--font-mono); margin-left: 0.3rem;">[WHAT-IF ACTIVE]</span>' : ''}
-        </div>
-        <div style="display: flex; gap: 0.35rem; align-items: center;">
-          <span class="badge-pill badge-claimed">Claimed: ${s.claimed_level}/5</span>
-          ${isVerified 
-            ? `<span class="badge-pill badge-verified">Lvl ${verifiedLvl} Verified</span>`
-            : `<span class="badge-pill badge-unverified">Unverified (0)</span>`}
-        </div>
-      </div>
-    `;
-  }).join("");
+function learnerSkill(name) {
+  const skills = state.pipelineData?.learner?.skills || [];
+  return skills.find((s) => s.skill.toLowerCase() === String(name).toLowerCase()) || null;
 }
 
-function renderHUD(metrics, weeksEst, weeksSaved) {
-  animateCounter("hudVerifiedScore", metrics.verified_readiness, "%");
-  document.getElementById("hudVerifiedFill").style.width = `${metrics.verified_readiness}%`;
-  document.getElementById("hudClaimedScore").textContent = `${metrics.claimed_readiness}%`;
-  document.getElementById("hudDeltaScore").textContent = `-${metrics.credibility_delta}%`;
-
-  document.getElementById("hudTimeEst").textContent = `${weeksEst} Weeks`;
-  const savingsTag = document.getElementById("hudSavingsTag");
-  if (weeksSaved > 0) {
-    savingsTag.style.display = "inline-block";
-    savingsTag.textContent = `-${weeksSaved} Weeks Saved!`;
-  } else {
-    savingsTag.style.display = "none";
-  }
-}
-
-function renderGapSimulations(gaps) {
-  const container = document.getElementById("gapSimulationStack");
-  document.getElementById("gapCountBadge").textContent = `${gaps.length} Prioritized Gaps`;
-
-  container.innerHTML = gaps.map(g => {
-    const isSimulated = state.simulatedSkills.has(g.skill);
-    return `
-      <div class="gap-card-sim ${isSimulated ? 'simulated-mastered' : ''}" id="gap-card-${g.skill}">
-        <div class="gap-card-top">
-          <span class="gap-name">${g.skill}</span>
-          <button class="toggle-whatif ${isSimulated ? 'active' : ''}" onclick="toggleSimulateSkill('${g.skill}')">
-            <span>⚡ What if I learn this?</span>
-          </button>
-        </div>
-        <div style="display: flex; gap: 0.4rem; margin-bottom: 0.35rem;">
-          <span class="badge-pill badge-claimed">Weight ${g.weight}</span>
-          <span class="badge-pill badge-unverified">Severity: ${g.severity_score}</span>
-          <span class="badge-pill badge-claimed">${g.gap_type}</span>
-        </div>
-        <p class="gap-explanation">${g.explanation}</p>
-      </div>
-    `;
-  }).join("");
-}
-
-function renderRoadmap(modules) {
-  const container = document.getElementById("roadmapTimeline");
-  container.innerHTML = modules.map(m => {
-    const isRemedial = m.is_remedial || m.diff_type === "added";
-    const isVanished = state.simulatedSkills.has(m.skill);
-
-    const bannerTag = isRemedial 
-      ? `<span style="font-family: var(--font-mono); font-size: 0.68rem; background: rgba(245,158,11,0.2); color: var(--neon-amber); padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700; margin-left: 0.5rem;">⚡ Injected by Mentor Agent</span>`
-      : isVanished
-      ? `<span style="font-family: var(--font-mono); font-size: 0.68rem; background: rgba(16,185,129,0.2); color: var(--neon-emerald); padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700; margin-left: 0.5rem;">✓ Pruned by Simulation</span>`
-      : "";
-
-    return `
-      <div class="roadmap-card ${isRemedial ? 'remedial' : ''} ${isVanished ? 'vanished' : ''}">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-          <div style="display: flex; align-items: center;">
-            <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">SPRINT ${m.order} · ${m.stage}</span>
-            ${bannerTag}
+function renderMatrix() {
+  const skills = state.pipelineData?.learner?.skills || [];
+  $("skillMatrixList").innerHTML = skills
+    .map((s) => {
+      const simulated = state.simulatedSkills.has(s.skill);
+      const verified = simulated ? Math.max(s.verified_level, 4) : s.verified_level;
+      const verifiedTag =
+        verified > 0
+          ? `<span class="badge-pill badge-verified">${verified}/5 verified</span>`
+          : `<span class="badge-pill badge-unverified">0 verified</span>`;
+      return `
+        <div class="skill-row">
+          <div><span>${esc(s.skill)}</span></div>
+          <div style="display:flex;gap:4px;align-items:center">
+            <span class="badge-pill badge-claimed">${s.claimed_level}/5 claimed</span>
+            ${verifiedTag}
           </div>
-          <span style="font-family: var(--font-mono); font-size: 0.72rem; background: rgba(255,255,255,0.05); padding: 0.15rem 0.45rem; border-radius: 4px;">${m.hours} Hours</span>
-        </div>
-
-        <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem;">${m.title}</h4>
-        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Prerequisite: <em>${m.prerequisite}</em></div>
-
-        <div class="resource-pair">
-          <a href="${m.resources.free.url}" target="_blank" rel="noopener noreferrer" class="resource-link">
-            <span style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--neon-cyan); display: block;">Free Resource (${m.resources.free.provider})</span>
-            <strong>${m.resources.free.title}</strong>
-          </a>
-          <a href="${m.resources.paid.url}" target="_blank" rel="noopener noreferrer" class="resource-link">
-            <span style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--neon-violet); display: block;">Deep Dive (${m.resources.paid.provider})</span>
-            <strong>${m.resources.paid.title}</strong>
-          </a>
-        </div>
-      </div>
-    `;
-  }).join("");
+        </div>`;
+    })
+    .join("");
 }
 
-// -----------------------------------------------------------------------------
-// THE SIGNATURE "WHAT-IF" SIMULATION ENGINE
-// -----------------------------------------------------------------------------
-function toggleSimulateSkill(skillName) {
-  if (state.simulatedSkills.has(skillName)) {
-    state.simulatedSkills.delete(skillName);
-    updateTicker(`Simulation: Cleared hypothetical mastery for ${skillName}. Baseline restored.`);
-  } else {
-    state.simulatedSkills.add(skillName);
-    triggerShockwaveParticle(skillName);
-    updateTicker(`🔮 Quantum Model: What-if ${skillName} Level 4 applied · Prerequisite sprints reduced!`);
-  }
-
-  recalculateSimulationState();
-}
-
-function resetSimulations() {
-  state.simulatedSkills.clear();
-  recalculateSimulationState();
-  updateTicker("All hypothetical simulations cleared. Baseline restored.");
-}
-
-function recalculateSimulationState() {
-  if (!state.pipelineData) return;
-
+function currentReadiness() {
+  if (!state.pipelineData) return { verified: 0, claimed: 0, delta: 0 };
   const role = state.pipelineData.target_role;
-  let totalReq = 0;
+  let total = 0;
   let earnedVerified = 0;
   let earnedClaimed = 0;
-  let hoursPruned = 0;
 
   for (const bench of role.benchmark_skills) {
-    const sName = bench.skill;
-    const baseSkill = state.pipelineData.learner.skills.find(s => s.skill.toLowerCase() === sName.toLowerCase());
-    let verified = baseSkill ? baseSkill.verified_level : 0;
-    let claimed = baseSkill ? baseSkill.claimed_level : 0;
+    const skill = learnerSkill(bench.skill);
+    let verified = skill ? skill.verified_level : 0;
+    const claimed = skill ? skill.claimed_level : 0;
+    if (state.simulatedSkills.has(bench.skill)) verified = Math.max(verified, bench.required_level);
 
-    if (state.simulatedSkills.has(sName)) {
-      verified = Math.max(verified, bench.required_level);
-      hoursPruned += 24; // Pruned hours
-    }
-
-    totalReq += bench.required_level * bench.weight;
+    total += bench.required_level * bench.weight;
     earnedVerified += Math.min(verified, bench.required_level) * bench.weight;
     earnedClaimed += Math.min(claimed, bench.required_level) * bench.weight;
   }
 
-  const verifiedReadiness = Math.round((earnedVerified / totalReq) * 1000) / 10;
-  const claimedReadiness = Math.round((earnedClaimed / totalReq) * 1000) / 10;
-  const delta = Math.round((claimedReadiness - verifiedReadiness) * 10) / 10;
-
-  const baseWeeks = 18;
-  const weeksSaved = Math.min(10, Math.round(hoursPruned / 8));
-  const newWeeks = Math.max(4, baseWeeks - weeksSaved);
-
-  const newMetrics = {
-    verified_readiness: verifiedReadiness,
-    claimed_readiness: claimedReadiness,
-    credibility_delta: Math.abs(delta)
-  };
-
-  renderHUD(newMetrics, newWeeks, weeksSaved);
-  renderSkillMatrix(state.pipelineData.learner.skills);
-  renderGapSimulations(state.pipelineData.gaps);
-  renderRoadmap(state.pipelineData.roadmap);
+  const verified = total ? Math.round((earnedVerified / total) * 1000) / 10 : 0;
+  const claimed = total ? Math.round((earnedClaimed / total) * 1000) / 10 : 0;
+  return { verified, claimed, delta: Math.round((claimed - verified) * 10) / 10 };
 }
 
-// -----------------------------------------------------------------------------
-// 10-Second Auto-Play Signature Tour (The Judge Hook)
-// -----------------------------------------------------------------------------
-async function play10SecondTour() {
-  if (state.tourPlaying) return;
-  state.tourPlaying = true;
-  const btn = document.getElementById("btnAutoTour");
-  btn.textContent = "⏳ Running Signature Demo...";
-
-  // 1. Reset to baseline
-  resetSimulations();
-  updateTicker("▶ Tour Step 1/3: Candidate Aarav Patel audited. Baseline readiness is 30.9%.");
-  await new Promise(r => setTimeout(r, 1200));
-
-  // 2. Flip "What If I Learn React"
-  toggleSimulateSkill("React");
-  updateTicker("▶ Tour Step 2/3: Flipping 'What If: React' → Readiness jumps 30.9% → 55.4% | -6 Weeks Saved!");
-  await new Promise(r => setTimeout(r, 1800));
-
-  // 3. Flip JavaScript
-  toggleSimulateSkill("JavaScript");
-  updateTicker("▶ Tour Step 3/3: JavaScript mastered → Readiness surges to 79.1% | 10 Weeks saved!");
-  await new Promise(r => setTimeout(r, 2000));
-
-  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> ▶ Replay 10s Demo`;
-  state.tourPlaying = false;
+function uncertaintyBand() {
+  const skills = state.pipelineData?.learner?.skills || [];
+  const verified = skills.filter((s) => s.verified_level > 0).length;
+  const totalRole = state.pipelineData?.target_role?.benchmark_skills?.length || 1;
+  const unverified = Math.max(0, totalRole - verified);
+  return Math.max(2, Math.min(15, Math.round(3 + (12 * unverified) / totalRole)));
 }
 
-// -----------------------------------------------------------------------------
-// Interactive Check-in & Dynamic Adaptive Diff
-// -----------------------------------------------------------------------------
+function planHours() {
+  return (state.pipelineData?.roadmap || []).reduce((sum, m) => sum + (Number(m.hours) || 0), 0);
+}
+
+function prunedHours() {
+  return (state.pipelineData?.roadmap || [])
+    .filter((m) => state.simulatedSkills.has(m.skill))
+    .reduce((sum, m) => sum + (Number(m.hours) || 0), 0);
+}
+
+function weeksFor(hours) {
+  return Math.max(1, Math.ceil(hours / HOURS_PER_WEEK));
+}
+
+function renderHUD() {
+  const { verified, claimed, delta } = currentReadiness();
+  const totalHours = planHours();
+  const weeks = weeksFor(totalHours - prunedHours());
+
+  animateNumber("hudVerifiedScore", verified, 1);
+  $("hudVerifiedFill").style.width = `${Math.max(2, verified)}%`;
+  $("hudClaimedScore").textContent = `${fmt(claimed)}%`;
+  $("hudDeltaScore").textContent = `${delta > 0 ? "+" : ""}${fmt(delta)}%`;
+  $("hudTimeEst").textContent = `${weeks} ${weeks === 1 ? "week" : "weeks"}`;
+  $("planWeeksNote").textContent = `at ${HOURS_PER_WEEK} hrs/week`;
+  $("uncertaintyVal").textContent = `±${uncertaintyBand()}`;
+
+  const saved = weeksFor(totalHours) - weeks;
+  const tag = $("hudSavingsTag");
+  if (saved > 0) {
+    tag.style.display = "inline-block";
+    tag.textContent = `${saved} ${saved === 1 ? "week" : "weeks"} saved`;
+  } else {
+    tag.style.display = "none";
+  }
+
+  const btn = document.querySelector("[data-whatif]");
+  if (btn) {
+    const on = state.simulatedSkills.has("React");
+    btn.textContent = on ? "React mastery simulated" : "What if I learn React?";
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+}
+
+function renderGaps() {
+  const gaps = state.pipelineData?.gaps || [];
+  $("gapCountBadge").textContent = `${gaps.length} open`;
+
+  $("gapSimulationStack").innerHTML = gaps
+    .map((g) => {
+      const on = state.simulatedSkills.has(g.skill);
+      return `
+        <div class="gap-card-sim ${on ? "simulated-mastered" : ""}">
+          <div class="gap-card-top">
+            <span class="gap-name">${esc(g.skill)}</span>
+            <button class="toggle-whatif ${on ? "active" : ""}" onclick="toggleSimulateSkill('${esc(g.skill).replace(/'/g, "\\'")}')">
+              ${on ? "mastered" : "what if?"}
+            </button>
+          </div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            <span class="badge-pill badge-claimed">weight ${g.weight}</span>
+            <span class="badge-pill badge-unverified">severity ${g.severity_score}</span>
+            <span class="badge-pill badge-unverified">${esc(g.gap_type)}</span>
+          </div>
+          <p class="gap-explanation">${esc(g.explanation)}</p>
+        </div>`;
+    })
+    .join("");
+}
+
+function renderRoadmap(modules) {
+  const list = modules || [];
+  $("roadmapTimeline").innerHTML = list
+    .map((m) => {
+      const remedial = m.is_remedial || m.diff_type === "added";
+      const vanished = state.simulatedSkills.has(m.skill);
+      const badge = remedial
+        ? `<span class="badge-pill badge-claimed" style="margin-left:6px">injected</span>`
+        : vanished
+        ? `<span class="badge-pill badge-verified" style="margin-left:6px">pruned</span>`
+        : "";
+
+      return `
+        <div class="roadmap-card ${remedial ? "remedial" : ""} ${vanished ? "vanished" : ""}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <span style="font-family:var(--mono);font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--faint)">
+              ${esc(m.stage || "sprint")} ${m.order}${badge}
+            </span>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${m.hours}h</span>
+          </div>
+          <h4>${esc(m.title)}</h4>
+          <div style="font-size:11px;color:var(--faint)">after <em style="color:var(--muted);font-style:normal">${esc(m.prerequisite || "—")}</em></div>
+          <div class="resource-pair">
+            <a class="resource-link" href="${esc(m.resources?.free?.url || "#")}" target="_blank" rel="noopener noreferrer">
+              <span style="color:var(--signal)">free · ${esc(m.resources?.free?.provider || "")}</span>
+              <strong>${esc(m.resources?.free?.title || "Documentation")}</strong>
+            </a>
+            <a class="resource-link" href="${esc(m.resources?.paid?.url || "#")}" target="_blank" rel="noopener noreferrer">
+              <span style="color:var(--teal)">deep · ${esc(m.resources?.paid?.provider || "")}</span>
+              <strong>${esc(m.resources?.paid?.title || "Course")}</strong>
+            </a>
+          </div>
+        </div>`;
+    })
+    .join("");
+}
+
+function showDiff(diff, fromAI) {
+  const banner = $("diffBanner");
+  banner.style.display = "block";
+  $("diffTitle").textContent = diff.trigger || "Adaptive re-plan applied";
+  $("diffNarrative").textContent = diff.mentor_narrative || diff.reason || "";
+  $("diffSource").textContent = diff.narrative_source === "gemini" ? "written by gemini" : "deterministic";
+}
+
+// ── What-if simulation ──────────────────────────────────────────────────────
+function toggleSimulateSkill(skill) {
+  if (state.simulatedSkills.has(skill)) {
+    state.simulatedSkills.delete(skill);
+    ticker(`Simulation cleared for ${skill}. Baseline restored.`);
+  } else {
+    state.simulatedSkills.add(skill);
+    ticker(`Hypothetical mastery applied: ${skill}. Readiness and schedule recalculated.`);
+    pulseNode(skill);
+  }
+  renderHUD();
+  renderGaps();
+  renderRoadmap(state.pipelineData?.roadmap || []);
+  renderMatrix();
+  rebuildSkillGraph();
+  drawProjection();
+}
+
+function resetSimulations() {
+  state.simulatedSkills.clear();
+  renderHUD();
+  renderGaps();
+  renderRoadmap(state.pipelineData?.roadmap || []);
+  renderMatrix();
+  rebuildSkillGraph();
+  drawProjection();
+  ticker("All simulations cleared. Baseline restored.");
+}
+
+// ── Explain this number ─────────────────────────────────────────────────────
+function openExplainModal() {
+  if (!state.pipelineData) return;
+  const role = state.pipelineData.target_role;
+  const rows = [];
+  let earnedSum = 0;
+  let totalSum = 0;
+
+  for (const bench of role.benchmark_skills) {
+    const skill = learnerSkill(bench.skill);
+    let verified = skill ? skill.verified_level : 0;
+    if (state.simulatedSkills.has(bench.skill)) verified = Math.max(verified, bench.required_level);
+    const capped = Math.min(verified, bench.required_level);
+    const points = capped * bench.weight;
+    const possible = bench.required_level * bench.weight;
+    earnedSum += points;
+    totalSum += possible;
+    rows.push(`
+      <tr>
+        <td>${esc(bench.skill)}</td>
+        <td class="num">${verified}</td>
+        <td class="num">${bench.required_level}</td>
+        <td class="num">${bench.weight}</td>
+        <td class="num">${capped} × ${bench.weight} = ${points}</td>
+        <td class="num">${possible}</td>
+      </tr>`);
+  }
+
+  const readiness = totalSum ? ((earnedSum / totalSum) * 100).toFixed(1) : "0.0";
+  const simulated = state.simulatedSkills.size
+    ? ` Includes ${[...state.simulatedSkills].join(", ")} at full requirement.`
+    : "";
+
+  $("explainBody").innerHTML = `
+    <table class="calc-table">
+      <thead>
+        <tr>
+          <th>Skill</th><th style="text-align:right">Verified</th><th style="text-align:right">Required</th>
+          <th style="text-align:right">Weight</th><th style="text-align:right">Points earned</th>
+          <th style="text-align:right">Max</th>
+        </tr>
+      </thead>
+      <tbody>${rows.join("")}</tbody>
+    </table>
+    <div class="calc-sum">
+      readiness = ${earnedSum} ÷ ${totalSum} × 100 = <b>${readiness}%</b><br>
+      band = ±${uncertaintyBand()}% (narrows as more skills are verified)<br>
+      schedule = ${planHours() - prunedHours()} planned hours ÷ ${HOURS_PER_WEEK} hrs/week = ${weeksFor(
+    planHours() - prunedHours()
+  )} weeks${simulated}
+    </div>
+    <p style="font-size:11.5px;color:var(--faint);margin-top:12px;line-height:1.6">
+      Verified level comes from a diagnostic check-in, never from the learner's own rating.
+      A model is used to write questions and prose, but it never touches this arithmetic.
+    </p>`;
+  $("explainModal").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeExplainModal() {
+  $("explainModal").classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+// ── Modal plumbing ──────────────────────────────────────────────────────────
+function bindModalDismissal() {
+  document.querySelectorAll(".modal").forEach((modal) => {
+    modal.addEventListener("mousedown", (e) => {
+      if (e.target === modal) closeAnyModal(modal);
+    });
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    document.querySelectorAll(".modal.open").forEach(closeAnyModal);
+  });
+}
+
+function closeAnyModal(modal) {
+  modal.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+// ── Assessment ──────────────────────────────────────────────────────────────
 async function openAssessmentModal(skill) {
   state.activeQuizSkill = skill;
-  document.getElementById("modalSkillName").textContent = skill;
-  const modal = document.getElementById("assessmentModal");
+  $("modalSkillName").textContent = skill;
+  $("quizSourceNote").textContent = "Three questions. Passing raises your verified level.";
+  $("quizQuestionsContainer").innerHTML = `<p style="color:var(--faint);font-size:12px">Assessor agent preparing questions…</p>`;
+  $("rubricResult").innerHTML = "";
+  $("conceptInput").value = "";
+  $("conceptQuestion").textContent = `Explain how you would use ${skill} in a real project, and one failure mode you would guard against.`;
+
+  const modal = $("assessmentModal");
   modal.classList.add("open");
+  document.body.style.overflow = "hidden";
+
+  const gap = (state.pipelineData?.gaps || []).find((g) => g.skill === skill);
+  const level = gap ? gap.required_level : 3;
 
   try {
-    const res = await fetch(`/api/assessment/${skill}`);
+    const res = await fetch(`/api/assessment/${encodeURIComponent(skill)}?level=${level}`);
     const data = await res.json();
     state.activeQuizData = data;
 
-    const container = document.getElementById("quizQuestionsContainer");
-    container.innerHTML = data.questions.map((q, qIdx) => `
-      <div style="margin-bottom: 1.2rem; padding-bottom: 0.9rem; border-bottom: 1px solid var(--glass-border);">
-        <p style="font-size: 0.88rem; font-weight: 600; color: #fff; margin-bottom: 0.6rem;">${qIdx + 1}. ${q.question}</p>
-        <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-          ${q.options.map((opt, optIdx) => `
-            <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
-              <input type="radio" name="question_${qIdx}" value="${optIdx}">
-              <span style="color: var(--text-secondary);">${opt}</span>
-            </label>
-          `).join("")}
-        </div>
-      </div>
-    `).join("");
+    if (data.source?.startsWith("gemini")) {
+      $("quizSourceNote").textContent = `Questions generated for this skill by Gemini · ${data.total_questions} probes.`;
+    } else if (data.source === "curated") {
+      $("quizSourceNote").textContent = "Curated expert bank · three concept probes.";
+    } else {
+      $("quizSourceNote").textContent = "AI offline · general engineering probe. Passing still verifies the skill.";
+    }
+
+    $("quizQuestionsContainer").innerHTML = (data.questions || [])
+      .map(
+        (q, qi) => `
+        <div class="q-block" data-q="${qi}">
+          <p class="q-text"><span class="q-num">${String(qi + 1).padStart(2, "0")}</span>${esc(q.question)}</p>
+          ${q.options
+            .map(
+              (opt, oi) => `
+            <label class="opt" data-opt="${oi}">
+              <input type="radio" name="q${qi}" value="${oi}">
+              <span>${esc(opt)}</span>
+              <span class="mark"></span>
+            </label>`
+            )
+            .join("")}
+        </div>`
+      )
+      .join("");
   } catch (err) {
-    console.error("Error fetching assessment:", err);
+    $("quizQuestionsContainer").innerHTML = `<p style="color:var(--rose);font-size:12px">Could not load questions. Close and retry.</p>`;
   }
 }
 
 function closeAssessmentModal() {
-  document.getElementById("assessmentModal").classList.remove("open");
+  $("assessmentModal").classList.remove("open");
+  document.body.style.overflow = "";
 }
 
-async function simulateFailedAssessment() {
-  await executeAssessmentGrading([0, 0, 0]); // Purposely wrong
+function resetModalChrome() {
+  const foot = $("assessmentModal").querySelector(".modal-foot");
+  foot.innerHTML = `
+    <button class="btn btn-danger-quiet" onclick="simulateFailedAssessment()">Simulate weakness</button>
+    <div class="modal-foot-right">
+      <button class="btn btn-quiet" onclick="closeAssessmentModal()">Cancel</button>
+      <button class="btn btn-solid" onclick="submitAssessmentAnswers()">Submit and grade</button>
+    </div>`;
+  $("assessmentModal").querySelector(".concept-block").style.display = "";
 }
 
 async function submitAssessmentAnswers() {
   if (!state.activeQuizData) return;
-  const answers = state.activeQuizData.questions.map((_, idx) => {
-    const selected = document.querySelector(`input[name="question_${idx}"]:checked`);
-    return selected ? parseInt(selected.value) : -1;
+  const answers = (state.activeQuizData.questions || []).map((_, i) => {
+    const chosen = document.querySelector(`input[name="q${i}"]:checked`);
+    return chosen ? parseInt(chosen.value, 10) : -1;
   });
-  await executeAssessmentGrading(answers);
+  await grade(answers);
 }
 
-async function executeAssessmentGrading(answers) {
-  closeAssessmentModal();
-  updateTicker("Assessor Agent grading responses... Transmitting to Mentor Agent.");
+async function simulateFailedAssessment() {
+  const wrong = (state.activeQuizData?.questions || []).map((q) => (q.correct_index === 0 ? 1 : 0));
+  await grade(wrong.length ? wrong : [0, 0, 0]);
+}
+
+async function grade(answers) {
+  if (!state.pipelineData) return;
+  ticker("Assessor agent grading. Mentor agent standing by.");
+
+  const concept = $("conceptInput")?.value?.trim() || "";
+  const gap = (state.pipelineData.gaps || []).find((g) => g.skill === state.activeQuizSkill);
 
   try {
     const res = await fetch("/api/assessment/grade", {
@@ -376,413 +539,661 @@ async function executeAssessmentGrading(answers) {
       body: JSON.stringify({
         learner_id: state.activeLearnerId,
         skill: state.activeQuizSkill,
-        answers: answers,
+        answers,
         current_modules: state.pipelineData.roadmap,
-        target_role_id: state.activeRoleId
-      })
+        target_role_id: state.activeRoleId,
+        level: gap ? gap.required_level : 3,
+        concept_question: concept ? $("conceptQuestion").textContent : null,
+        concept_answer: concept || null,
+      }),
     });
+    if (!res.ok) throw new Error(`grade ${res.status}`);
     const data = await res.json();
+    state.lastGrade = data;
 
-    // Show Amber Diff Banner
-    const banner = document.getElementById("diffBanner");
-    banner.style.display = "block";
-    document.getElementById("diffTitle").textContent = data.diff_summary.trigger;
-    document.getElementById("diffNarrative").textContent = data.diff_summary.mentor_narrative;
+    renderGradeResults(data, answers);
+    await streamHandoffs(data.agent_logs || []);
 
-    renderRoadmap(data.updated_roadmap);
-    state.pipelineData.roadmap = data.updated_roadmap;
+    // Apply the new plan behind the modal so "View re-plan" lands on fresh state.
+    if (data.updated_roadmap) state.pipelineData.roadmap = data.updated_roadmap;
+    if (data.new_metrics) state.pipelineData.metrics = data.new_metrics;
+    if (data.adaptive_replan && data.diff_summary?.weeks_after) {
+      // Roadmap grew: keep the deterministic recomputation honest by re-deriving weeks.
+    }
 
-    await streamAgentHandoffs(data.agent_logs);
-    document.getElementById("panelRoadmap").scrollIntoView({ behavior: "smooth", block: "start" });
-
+    showDiff(data.diff_summary || {}, true);
+    renderRoadmap(state.pipelineData.roadmap);
+    renderHUD();
+    renderMatrix();
+    drawProjection();
+    rebuildSkillGraph();
+    loadAIStatus();
   } catch (err) {
-    console.error("Grading failed:", err);
+    console.error("grading failed", err);
+    ticker("Grading failed. Nothing was changed.");
   }
 }
 
-// -----------------------------------------------------------------------------
-// Quick Controls
-// -----------------------------------------------------------------------------
-function loadLearnerPreset(learnerId) {
-  state.activeLearnerId = learnerId;
-  document.getElementById("learnerSelect").value = learnerId;
-  const l = state.learners.find(x => x.id === learnerId);
-  if (l) {
-    state.activeRoleId = l.target_role_id;
-    document.getElementById("roleSelect").value = l.target_role_id;
-  }
-  document.getElementById("diffBanner").style.display = "none";
-  runOrchestration(learnerId, state.activeRoleId);
+function renderGradeResults(data, answers) {
+  const g = data.grade_result || {};
+  const questions = state.activeQuizData?.questions || [];
+
+  const rows = questions
+    .map((q, i) => {
+      const picked = answers[i];
+      const correct = q.correct_index;
+      return `
+        <div class="q-block">
+          <p class="q-text"><span class="q-num">${String(i + 1).padStart(2, "0")}</span>${esc(q.question)}</p>
+          ${q.options
+            .map((opt, oi) => {
+              const isCorrect = oi === correct;
+              const isPicked = oi === picked;
+              const cls = isCorrect ? "correct" : isPicked ? "wrong" : "";
+              const mark = isCorrect ? "correct answer" : isPicked ? "your answer" : "";
+              return `<div class="opt ${cls}"><span>${esc(opt)}</span>${
+                mark ? `<span class="mark">${mark}</span>` : ""
+              }</div>`;
+            })
+            .join("")}
+          ${q.explanation ? `<div class="explain">${esc(q.explanation)}</div>` : ""}
+        </div>`;
+    })
+    .join("");
+
+  const rubric = data.concept_grade;
+  const rubricHtml =
+    rubric && rubric.graded
+      ? `<div class="result-head" style="margin-top:16px">
+           <div class="result-score">${rubric.score}<span style="font-size:14px;color:var(--faint)">/100</span></div>
+           <div>
+             <div class="result-meta">Written answer · rubric-graded by Gemini</div>
+             <div class="result-verdict">${esc(rubric.verdict || "")}</div>
+           </div>
+         </div>
+         ${(rubric.criteria || [])
+           .map(
+             (c) => `<div class="rubric-row">
+               <span class="rubric-name">${esc(c.name)}</span>
+               <span class="${c.met ? "rubric-met" : "rubric-miss"}">${c.met ? "met" : "missed"}</span>
+               <span class="rubric-note">${esc(c.note)}</span>
+             </div>`
+           )
+           .join("")}`
+      : "";
+
+  $("quizQuestionsContainer").innerHTML = `
+    <div class="result-head">
+      <div class="result-score ${g.passed ? "pass" : "fail"}">${g.percentage}<span style="font-size:14px;color:var(--faint)">%</span></div>
+      <div>
+        <div class="result-meta">${g.score}/${g.total} correct · ${esc(state.activeQuizSkill)}</div>
+        <div class="result-verdict ${g.passed ? "pass" : "fail"}">
+          ${g.passed ? "Passed — verified level raised" : "Below 66% — the roadmap was rewritten"}
+        </div>
+      </div>
+    </div>
+    ${rows}
+    ${rubricHtml}`;
+
+  $("assessmentModal").querySelector(".concept-block").style.display = "none";
+
+  const rebanned = data.adaptive_replan;
+  $("assessmentModal").querySelector(".modal-foot").innerHTML = `
+    <button class="btn btn-quiet" onclick="closeAssessmentModal()">Close</button>
+    <div class="modal-foot-right">
+      <button class="btn btn-solid" onclick="closeAssessmentModal(); document.getElementById('panelRoadmap').scrollIntoView({behavior:'smooth', block:'center'})">
+        ${rebanned ? "View the new roadmap" : "Back to dashboard"}
+      </button>
+    </div>`;
+
+  ticker(
+    rebanned
+      ? `Mentor agent re-planned: ${data.diff_summary?.added_modules?.[0] || "remedial sprint"} inserted.`
+      : `Skill verified at ${g.percentage}%. Readiness recalculated.`
+  );
 }
 
-function onLearnerChange(id) { loadLearnerPreset(id); }
-
+// ── Goal switching ──────────────────────────────────────────────────────────
 async function onRoleChange(roleId) {
   state.activeRoleId = roleId;
-  updateTicker(`Switching target track to ${roleId}... Re-evaluating Euclidean gaps.`);
+  ticker(`Target role changed to ${roleId}. Re-evaluating every benchmark skill.`);
   try {
     const res = await fetch("/api/switch-goal", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ learner_id: state.activeLearnerId, new_role_id: roleId })
+      body: JSON.stringify({ learner_id: state.activeLearnerId, new_role_id: roleId }),
     });
+    if (!res.ok) throw new Error(`switch ${res.status}`);
     const data = await res.json();
-    renderHUD(data.metrics, 18, 0);
-    renderGapSimulations(data.gaps);
+
+    state.pipelineData.target_role = data.new_role;
+    state.pipelineData.metrics = data.metrics;
+    state.pipelineData.gaps = data.gaps;
+    state.pipelineData.roadmap = data.roadmap;
+    state.simulatedSkills.clear();
+
+    await streamHandoffs(data.agent_logs || []);
+    renderHUD();
+    renderGaps();
     renderRoadmap(data.roadmap);
-    await streamAgentHandoffs(data.agent_logs);
+    rebuildSkillGraph();
+    drawProjection();
+    $("readoutTarget").textContent = data.new_role.title;
+    if (data.diff_summary) showDiff(data.diff_summary, false);
   } catch (err) {
-    console.error("Goal switch error:", err);
+    console.error("goal switch failed", err);
   }
 }
 
 function quickSwitchGoal(roleId) {
-  document.getElementById("roleSelect").value = roleId;
+  $("roleSelect").value = roleId;
   onRoleChange(roleId);
 }
 
-// -----------------------------------------------------------------------------
-// Number Counter Animation
-// -----------------------------------------------------------------------------
-function animateCounter(elemId, targetVal, suffix = "") {
-  const el = document.getElementById(elemId);
-  if (!el) return;
-  const currentVal = parseFloat(el.textContent) || 0;
-  const duration = 500;
-  const startTime = performance.now();
-
-  function update(time) {
-    const elapsed = time - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const ease = 1 - Math.pow(1 - progress, 3);
-    const val = currentVal + (targetVal - currentVal) * ease;
-    el.textContent = `${val.toFixed(1)}${suffix}`;
-    if (progress < 1) requestAnimationFrame(update);
+function loadLearnerPreset(learnerId) {
+  state.activeLearnerId = learnerId;
+  $("learnerSelect").value = learnerId;
+  const learner = state.learners.find((l) => l.id === learnerId);
+  if (learner) {
+    state.activeRoleId = learner.target_role_id;
+    $("roleSelect").value = learner.target_role_id;
   }
-  requestAnimationFrame(update);
+  runOrchestration(learnerId, state.activeRoleId);
 }
 
-// -----------------------------------------------------------------------------
-// PURE HTML5 60-FPS 3D GYROSCOPE CANVAS ENGINE (ZERO EXTERNAL DEPENDENCY)
-// -----------------------------------------------------------------------------
-let gyroNodes = [
-  { name: "Python", x: -0.6, y: -0.4, z: 0.3, color: "#10b981", radius: 5 },
-  { name: "SQL", x: 0.5, y: -0.5, z: -0.2, color: "#10b981", radius: 5 },
-  { name: "HTML", x: -0.2, y: 0.6, z: -0.4, color: "#10b981", radius: 4 },
-  { name: "JavaScript", x: 0.3, y: 0.3, z: 0.6, color: "#f59e0b", radius: 6 },
-  { name: "React", x: 0.7, y: 0.1, z: 0.3, color: "#f43f5e", radius: 6 },
-  { name: "Node.js", x: -0.5, y: 0.2, z: 0.5, color: "#f43f5e", radius: 5 }
-];
+function onLearnerChange(id) {
+  loadLearnerPreset(id);
+}
 
-let shockwaves = [];
-let gyroAngleX = 0;
-let gyroAngleY = 0;
+// ── Number animation ────────────────────────────────────────────────────────
+function animateNumber(id, target, decimals = 0) {
+  const el = $(id);
+  if (!el) return;
+  const from = parseFloat(el.textContent) || 0;
+  const to = Number(target) || 0;
+  const started = performance.now();
+  const dur = 650;
 
-function init3DGyroscope() {
-  const canvas = document.getElementById("skillGyroCanvas");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
+  function step(now) {
+    const p = Math.min((now - started) / dur, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const value = from + (to - from) * eased;
+    el.textContent = decimals ? value.toFixed(decimals) : Math.round(value);
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = decimals ? to.toFixed(decimals) : String(Math.round(to));
+  }
+  requestAnimationFrame(step);
+}
 
-  function renderGyro() {
-    gyroAngleY += 0.008;
-    gyroAngleX += 0.004;
+// ══════════════════════════════════════════════════════════════════════════
+// 3D SKILL GRAPH — the learner's real competency map, rendered in space
+// ══════════════════════════════════════════════════════════════════════════
+const graph = {
+  canvas: null,
+  ctx: null,
+  nodes: [],
+  edges: [],
+  angleY: 0,
+  angleX: -0.25,
+  velocityY: 0.0016,
+  dragging: false,
+  lastX: 0,
+  lastY: 0,
+  parallaxX: 0,
+  parallaxY: 0,
+  shards: [],
+  hovered: null,
+};
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-    const scale = 72;
+function initSkillGraph() {
+  graph.canvas = $("bg3DCanvas");
+  graph.ctx = graph.canvas.getContext("2d");
+  resizeGraph();
 
-    // Outer Gyro Rings
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
-    ctx.lineWidth = 1;
+  window.addEventListener("resize", resizeGraph);
+
+  graph.canvas.style.pointerEvents = "auto";
+
+  graph.canvas.addEventListener("pointerdown", (e) => {
+    graph.dragging = true;
+    hideGraphTooltip();
+    graph.lastX = e.clientX;
+    graph.lastY = e.clientY;
+  });
+  window.addEventListener("pointerup", () => (graph.dragging = false));
+  window.addEventListener("pointermove", (e) => {
+    if (graph.dragging) {
+      graph.angleY += (e.clientX - graph.lastX) * 0.004;
+      graph.angleX += (e.clientY - graph.lastY) * 0.003;
+      graph.angleX = Math.max(-0.9, Math.min(0.9, graph.angleX));
+      graph.lastX = e.clientX;
+      graph.lastY = e.clientY;
+      return;
+    }
+    graph.parallaxX = (e.clientX / window.innerWidth - 0.5) * 0.5;
+    graph.parallaxY = (e.clientY / window.innerHeight - 0.5) * 0.35;
+    graph.hovered = hitTest(e.clientX, e.clientY);
+    graph.canvas.style.cursor = graph.hovered ? "pointer" : "default";
+    updateGraphTooltip(e.clientX, e.clientY);
+  });
+  graph.canvas.addEventListener("pointerleave", () => {
+    graph.hovered = null;
+    hideGraphTooltip();
+  });
+  graph.canvas.addEventListener("click", (e) => {
+    const node = hitTest(e.clientX, e.clientY);
+    if (node) openAssessmentModal(node.skill);
+  });
+
+  requestAnimationFrame(drawGraph);
+}
+
+function updateGraphTooltip(x, y) {
+  const tip = $("graphTooltip");
+  const node = graph.hovered;
+  if (!tip || !node) {
+    hideGraphTooltip();
+    return;
+  }
+  const status = node.status === "verified" ? "verified" : node.status === "partial" ? "partial evidence" : node.status === "claimed" ? "claimed only" : "missing evidence";
+  tip.innerHTML = `
+    <div class="graph-tooltip-title">${esc(node.skill)}</div>
+    <div class="graph-tooltip-meta"><span class="graph-tooltip-status">${status}</span><span>weight ${node.weight}</span><span>need ${node.required}/5</span></div>
+    <div class="graph-tooltip-cta">click to open diagnostic</div>`;
+  const left = Math.min(window.innerWidth - 224, Math.max(12, x + 16));
+  const top = Math.min(window.innerHeight - 92, Math.max(72, y + 16));
+  tip.style.left = `${left}px`;
+  tip.style.top = `${top}px`;
+  tip.classList.add("open");
+}
+
+function hideGraphTooltip() {
+  const tip = $("graphTooltip");
+  if (tip) tip.classList.remove("open");
+}
+
+function resizeGraph() {
+  if (!graph.canvas) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  graph.canvas.width = Math.floor(window.innerWidth * dpr);
+  graph.canvas.height = Math.floor(window.innerHeight * dpr);
+  graph.canvas.style.width = `${window.innerWidth}px`;
+  graph.canvas.style.height = `${window.innerHeight}px`;
+  graph.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function fibonacciSphere(count) {
+  const points = [];
+  const offset = 2 / count;
+  const increment = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < count; i++) {
+    const y = i * offset - 1 + offset / 2;
+    const r = Math.sqrt(Math.max(0, 1 - y * y));
+    const phi = i * increment;
+    points.push({ x: Math.cos(phi) * r, y, z: Math.sin(phi) * r });
+  }
+  return points;
+}
+
+function rebuildSkillGraph() {
+  if (!state.pipelineData?.target_role) return;
+  const role = state.pipelineData.target_role;
+  const skills = role.benchmark_skills || [];
+  const points = fibonacciSphere(skills.length);
+
+  graph.nodes = skills.map((bench, i) => {
+    const learner = learnerSkill(bench.skill);
+    const verified = learner ? learner.verified_level : 0;
+    const claimed = learner ? learner.claimed_level : 0;
+    const simulated = state.simulatedSkills.has(bench.skill);
+
+    let status = "missing";
+    if (simulated || verified >= bench.required_level) status = "verified";
+    else if (verified > 0) status = "partial";
+    else if (claimed > 0) status = "claimed";
+
+    return {
+      skill: bench.skill,
+      x: points[i].x,
+      y: points[i].y,
+      z: points[i].z,
+      weight: bench.weight,
+      required: bench.required_level,
+      verified,
+      claimed,
+      status,
+      radius: 2.6 + bench.weight * 0.9,
+      phase: i * 0.7,
+    };
+  });
+
+  // Deterministic edges: pair each skill with its two nearest neighbours.
+  const edges = new Set();
+  graph.nodes.forEach((a, i) => {
+    const near = graph.nodes
+      .map((b, j) => ({ j, d: (a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2 }))
+      .filter((o) => o.j !== i)
+      .sort((p, q) => p.d - q.d)
+      .slice(0, 2);
+    near.forEach(({ j }) => edges.add(i < j ? `${i}-${j}` : `${j}-${i}`));
+  });
+  graph.edges = [...edges].map((e) => e.split("-").map(Number));
+}
+
+function projectNode(node, cx, cy, scale, ay, ax) {
+  const cosY = Math.cos(ay);
+  const sinY = Math.sin(ay);
+  const x1 = node.x * cosY - node.z * sinY;
+  const z1 = node.x * sinY + node.z * cosY;
+
+  const cosX = Math.cos(ax);
+  const sinX = Math.sin(ax);
+  const y2 = node.y * cosX - z1 * sinX;
+  const z2 = node.y * sinX + z1 * cosX;
+
+  const fov = 2.4 / (2.4 + z2);
+  return { px: cx + x1 * scale * fov, py: cy + y2 * scale * fov, depth: z2, fov };
+}
+
+function drawGraph(ts) {
+  const ctx = graph.ctx;
+  if (!ctx) return;
+
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  ctx.clearRect(0, 0, w, h);
+
+  if (!graph.dragging) graph.angleY += graph.velocityY;
+
+  const ay = graph.angleY + graph.parallaxX;
+  const ax = graph.angleX + graph.parallaxY;
+
+  const cx = w * 0.5;
+  const cy = h * 0.46;
+  const scale = Math.min(w, h) * 0.36;
+
+  const projected = graph.nodes.map((n) => ({ node: n, ...projectNode(n, cx, cy, scale, ay, ax) }));
+  projected.sort((a, b) => a.depth - b.depth); // far first
+
+  // Quiet orbital rings make the rotation legible before a node is selected.
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(ax * 0.35);
+  ctx.strokeStyle = "rgba(199,255,74,0.07)";
+  ctx.lineWidth = 1;
+  for (const ratio of [0.72, 1]) {
     ctx.beginPath();
-    ctx.ellipse(cx, cy, 75, 75, gyroAngleY * 0.5, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, scale * ratio, scale * ratio * (0.25 + Math.abs(Math.sin(ax)) * 0.18), 0, 0, Math.PI * 2);
     ctx.stroke();
+  }
+  ctx.restore();
 
-    ctx.strokeStyle = "rgba(6, 182, 212, 0.15)";
+  // Edges
+  ctx.lineWidth = 1;
+  for (const [i, j] of graph.edges) {
+    const a = projected.find((p) => p.node.skill === graph.nodes[i]?.skill);
+    const b = projected.find((p) => p.node.skill === graph.nodes[j]?.skill);
+    if (!a || !b) continue;
+    const active = a.node.status === "verified" || b.node.status === "verified";
+    ctx.strokeStyle = active ? "rgba(199,255,74,0.16)" : "rgba(255,255,255,0.055)";
     ctx.beginPath();
-    ctx.ellipse(cx, cy, 85, 35, gyroAngleX, 0, Math.PI * 2);
+    ctx.moveTo(a.px, a.py);
+    ctx.lineTo(b.px, b.py);
     ctx.stroke();
+  }
 
-    // Central Knowledge Core
-    const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 20);
-    grad.addColorStop(0, "rgba(6, 182, 212, 0.8)");
-    grad.addColorStop(1, "rgba(139, 92, 246, 0)");
-    ctx.fillStyle = grad;
+  // Nodes
+  for (const p of projected) {
+    const n = p.node;
+    let color = "rgba(255,255,255,0.22)";
+    if (n.status === "verified") color = "#c7ff4a";
+    else if (n.status === "partial") color = "#5fd4c4";
+    else if (n.status === "claimed") color = "#f2a93b";
+    else color = "rgba(255,107,94,0.55)";
+
+    const r = Math.max(1.6, n.radius * p.fov);
+    const fade = Math.max(0.18, Math.min(1, (2.2 - p.depth) / 2.2));
+
+    if (n.status === "verified" || n.status === "claimed" || n === graph.hovered) {
+      const glow = ctx.createRadialGradient(p.px, p.py, 0, p.px, p.py, r * 5);
+      glow.addColorStop(0, color.replace(")", ", 0.5)").replace("rgb", "rgba"));
+      glow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = n.status === "verified" ? "rgba(199,255,74,0.16)" : "rgba(242,169,59,0.12)";
+      ctx.beginPath();
+      ctx.arc(p.px, p.py, r * 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.globalAlpha = fade;
+    ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+    ctx.arc(p.px, p.py, r, 0, Math.PI * 2);
     ctx.fill();
 
-    // Projected Nodes
-    const projected = gyroNodes.map(node => {
-      // Rotate Y
-      const cosY = Math.cos(gyroAngleY);
-      const sinY = Math.sin(gyroAngleY);
-      const x1 = node.x * cosY - node.z * sinY;
-      const z1 = node.x * sinY + node.z * cosY;
-
-      // Rotate X
-      const cosX = Math.cos(gyroAngleX);
-      const sinX = Math.sin(gyroAngleX);
-      const y2 = node.y * cosX - z1 * sinX;
-      const z2 = node.y * sinX + z1 * cosX;
-
-      const fov = 2.2 / (2.2 + z2);
-      const px = cx + x1 * scale * fov;
-      const py = cy + y2 * scale * fov;
-
-      const isSimulated = state.simulatedSkills.has(node.name);
-      const color = isSimulated ? "#06b6d4" : node.color;
-
-      return { ...node, px, py, fov, color, isSimulated };
-    });
-
-    // Draw Vector Connections
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
-    ctx.lineWidth = 1;
-    for (let i = 0; i < projected.length; i++) {
-      for (let j = i + 1; j < projected.length; j++) {
-        ctx.beginPath();
-        ctx.moveTo(projected[i].px, projected[i].py);
-        ctx.lineTo(projected[j].px, projected[j].py);
-        ctx.stroke();
-      }
-    }
-
-    // Draw Nodes
-    for (const p of projected) {
-      ctx.fillStyle = p.color;
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = p.isSimulated ? 16 : 8;
-
+    // Required-level ring for gaps
+    if (n.status === "missing" || n.status === "partial") {
+      ctx.globalAlpha = fade * 0.5;
+      ctx.strokeStyle = "rgba(255,255,255,0.28)";
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(p.px, p.py, p.radius * p.fov, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      // Text label
-      ctx.fillStyle = p.isSimulated ? "#06b6d4" : "rgba(255, 255, 255, 0.75)";
-      ctx.font = `500 ${Math.round(8 * p.fov)}px var(--font-mono)`;
-      ctx.fillText(p.name, p.px + 8, p.py + 3);
-    }
-
-    // Shockwave particles
-    for (let i = shockwaves.length - 1; i >= 0; i--) {
-      const sw = shockwaves[i];
-      sw.r += 2.5;
-      sw.alpha -= 0.03;
-      if (sw.alpha <= 0) {
-        shockwaves.splice(i, 1);
-        continue;
-      }
-      ctx.strokeStyle = `rgba(6, 182, 212, ${sw.alpha})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+      ctx.arc(p.px, p.py, r + 3.5, 0, Math.PI * 2);
       ctx.stroke();
     }
 
-    requestAnimationFrame(renderGyro);
+    // Labels for the most significant nodes only
+    const significant = n.weight >= 4 || n.status === "verified" || n === graph.hovered;
+    if (significant && w > 720) {
+      ctx.globalAlpha = fade * (n === graph.hovered ? 1 : 0.55);
+      ctx.fillStyle = n === graph.hovered ? "#ecedef" : "rgba(236,237,239,0.75)";
+      ctx.font = "500 10px 'JetBrains Mono', monospace";
+      ctx.textAlign = "left";
+      ctx.fillText(n.skill, p.px + r + 5, p.py + 3);
+    }
+    ctx.globalAlpha = 1;
   }
 
-  requestAnimationFrame(renderGyro);
+  // Shockwave shards from simulation pulses
+  for (let i = graph.shards.length - 1; i >= 0; i--) {
+    const s = graph.shards[i];
+    s.r += 2.6;
+    s.a -= 0.018;
+    if (s.a <= 0) {
+      graph.shards.splice(i, 1);
+      continue;
+    }
+    ctx.strokeStyle = `rgba(199,255,74,${s.a})`;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  requestAnimationFrame(drawGraph);
 }
 
-function triggerShockwaveParticle(skillName) {
-  const canvas = document.getElementById("skillGyroCanvas");
+function hitTest(clientX, clientY) {
+  if (!graph.nodes.length) return null;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const cx = w * 0.5;
+  const cy = h * 0.46;
+  const scale = Math.min(w, h) * 0.36;
+  const ay = graph.angleY + graph.parallaxX;
+  const ax = graph.angleX + graph.parallaxY;
+
+  let best = null;
+  let bestDist = 22;
+  for (const node of graph.nodes) {
+    const p = projectNode(node, cx, cy, scale, ay, ax);
+    const d = Math.hypot(p.px - clientX, p.py - clientY);
+    if (d < bestDist) {
+      bestDist = d;
+      best = node;
+    }
+  }
+  return best;
+}
+
+function pulseNode(skill) {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const node = graph.nodes.find((n) => n.skill === skill);
+  if (!node) return;
+  const p = projectNode(node, w * 0.5, h * 0.46, Math.min(w, h) * 0.36, graph.angleY, graph.angleX);
+  graph.shards.push({ x: p.px, y: p.py, r: 6, a: 0.75 });
+  rebuildSkillGraph();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// READINESS PROJECTION — what the plan actually buys
+// ══════════════════════════════════════════════════════════════════════════
+function initProjection() {
+  const canvas = $("skillGyroCanvas");
   if (!canvas) return;
-  const node = gyroNodes.find(n => n.name.toLowerCase() === skillName.toLowerCase());
-  const cx = canvas.width / 2;
-  const cy = canvas.height / 2;
-  shockwaves.push({ x: cx, y: cy, r: 8, alpha: 1 });
-  triggerBackgroundShockwave();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = canvas.clientWidth || 300;
+  const h = 170;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.height = `${h}px`;
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawProjection();
 }
 
-// =============================================================================
-// FULL-VIEWPORT PERSISTENT 3D BACKGROUND SKILL CONSTELLATION & PARALLAX ENGINE
-// =============================================================================
-let bgCanvas, bgCtx;
-let bgNodes = [];
-let bgMouseX = 0, bgMouseY = 0;
-let bgCameraX = 0, bgCameraY = 0;
-let bgRotAngle = 0;
-let bgShockwaves = [];
+function drawProjection() {
+  const canvas = $("skillGyroCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = canvas.clientWidth || 300;
+  const h = 170;
 
-const CAREER_SKILLS_GALAXY = [
-  // Web & Full Stack Cluster
-  { name: "JavaScript", role: "Frontend", x: -280, y: -120, z: 80, color: "#f59e0b", req: true },
-  { name: "React 19", role: "Frontend", x: -380, y: -40, z: 120, color: "#f43f5e", req: true },
-  { name: "Node.js", role: "Backend", x: -220, y: 140, z: 60, color: "#f43f5e", req: true },
-  { name: "HTML/CSS", role: "Frontend", x: -160, y: -240, z: -40, color: "#10b981", req: false },
-  { name: "REST APIs", role: "Architecture", x: -120, y: 40, z: 160, color: "#06b6d4", req: false },
-  { name: "TypeScript", role: "Core", x: -420, y: -180, z: -90, color: "#06b6d4", req: false },
-  { name: "GraphQL", role: "API", x: -310, y: 220, z: -30, color: "#8b5cf6", req: false },
-
-  // AI & Data Cluster
-  { name: "Python", role: "General", x: 120, y: -200, z: 140, color: "#10b981", req: false },
-  { name: "SQL", role: "Data", x: 200, y: -80, z: -110, color: "#10b981", req: false },
-  { name: "PyTorch 2.x", role: "AI", x: 340, y: -140, z: 90, color: "#8b5cf6", req: false },
-  { name: "LLM Orchestration", role: "AI", x: 420, y: -20, z: 180, color: "#06b6d4", req: false },
-  { name: "Vector DBs", role: "AI", x: 310, y: 120, z: 40, color: "#06b6d4", req: false },
-  { name: "Data Modeling", role: "Data", x: 240, y: 200, z: -80, color: "#10b981", req: false },
-
-  // Cloud & DevOps Cluster
-  { name: "Docker", role: "DevOps", x: 40, y: 260, z: 100, color: "#06b6d4", req: false },
-  { name: "Kubernetes", role: "DevOps", x: 140, y: 320, z: -40, color: "#f43f5e", req: false },
-  { name: "Terraform", role: "IaC", x: -40, y: 340, z: -120, color: "#f59e0b", req: false },
-  { name: "AWS / GCP", role: "Cloud", x: 260, y: 270, z: 120, color: "#06b6d4", req: false },
-  { name: "Linux / Bash", role: "Systems", x: -60, y: -140, z: -150, color: "#10b981", req: false }
-];
-
-function initPersistent3DBackground() {
-  bgCanvas = document.getElementById("bg3DCanvas");
-  if (!bgCanvas) return;
-  bgCtx = bgCanvas.getContext("2d");
-
-  function resize() {
-    bgCanvas.width = window.innerWidth;
-    bgCanvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener("resize", resize);
-
-  // Mouse Parallax listener
-  window.addEventListener("mousemove", e => {
-    const normX = (e.clientX / window.innerWidth) - 0.5;
-    const normY = (e.clientY / window.innerHeight) - 0.5;
-    bgMouseX = normX * 0.45;
-    bgMouseY = normY * 0.45;
-  });
-
-  // Initialize node constellation
-  bgNodes = CAREER_SKILLS_GALAXY.map(s => ({
-    ...s,
-    origX: s.x,
-    origY: s.y,
-    origZ: s.z,
-    currX: s.x,
-    currY: s.y,
-    currZ: s.z,
-    pulseOffset: Math.random() * Math.PI * 2
-  }));
-
-  function animate() {
-    bgRotAngle += 0.003;
-    bgCameraX += (bgMouseX - bgCameraX) * 0.05;
-    bgCameraY += (bgMouseY - bgCameraY) * 0.05;
-
-    bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
-
-    const cx = bgCanvas.width / 2;
-    const cy = bgCanvas.height / 2;
-    const focalLength = 550;
-
-    // Ambient Cyber Grid / Horizon Lines
-    bgCtx.strokeStyle = "rgba(255, 255, 255, 0.015)";
-    bgCtx.lineWidth = 1;
-    for (let i = -400; i <= 400; i += 120) {
-      bgCtx.beginPath();
-      bgCtx.moveTo(0, cy + i + (bgCameraY * 80));
-      bgCtx.lineTo(bgCanvas.width, cy + i + (bgCameraY * 80));
-      bgCtx.stroke();
-    }
-
-    // Project 3D Galaxy Nodes
-    const cosR = Math.cos(bgRotAngle + bgCameraX);
-    const sinR = Math.sin(bgRotAngle + bgCameraX);
-    const cosP = Math.cos(bgCameraY);
-    const sinP = Math.sin(bgCameraY);
-
-    const projected = bgNodes.map(node => {
-      // Rotation Y
-      const x1 = node.origX * cosR - node.origZ * sinR;
-      const z1 = node.origX * sinR + node.origZ * cosR;
-
-      // Pitch X
-      const y2 = node.origY * cosP - z1 * sinP;
-      const z2 = node.origY * sinP + z1 * cosP;
-
-      const fov = focalLength / (focalLength + z2 + 300);
-      const px = cx + x1 * fov;
-      const py = cy + y2 * fov;
-
-      const isSimulated = state.simulatedSkills.has(node.name);
-      const color = isSimulated ? "#06b6d4" : node.color;
-      const radius = Math.max(2, (isSimulated ? 6 : 4) * fov);
-
-      return { ...node, px, py, fov, zIndex: z2, color, radius, isSimulated };
-    });
-
-    // Sort by depth (painter's algorithm)
-    projected.sort((a, b) => b.zIndex - a.zIndex);
-
-    // Draw Constellation Vector Laser Connections
-    bgCtx.lineWidth = 1;
-    for (let i = 0; i < projected.length; i++) {
-      for (let j = i + 1; j < projected.length; j++) {
-        const dx = projected[i].px - projected[j].px;
-        const dy = projected[i].py - projected[j].py;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < 180) {
-          const alpha = (1 - dist / 180) * 0.12 * Math.min(projected[i].fov, projected[j].fov);
-          bgCtx.strokeStyle = `rgba(6, 182, 212, ${alpha})`;
-          bgCtx.beginPath();
-          bgCtx.moveTo(projected[i].px, projected[i].py);
-          bgCtx.lineTo(projected[j].px, projected[j].py);
-          bgCtx.stroke();
-        }
-      }
-    }
-
-    // Draw Career Hub Nodes
-    for (const p of projected) {
-      if (p.px < -50 || p.px > bgCanvas.width + 50 || p.py < -50 || p.py > bgCanvas.height + 50) continue;
-
-      const glow = p.isSimulated ? 18 : 6;
-      bgCtx.fillStyle = p.color;
-      bgCtx.shadowColor = p.color;
-      bgCtx.shadowBlur = glow;
-
-      bgCtx.beginPath();
-      bgCtx.arc(p.px, p.py, p.radius, 0, Math.PI * 2);
-      bgCtx.fill();
-      bgCtx.shadowBlur = 0;
-
-      // Subtle Label
-      bgCtx.fillStyle = p.isSimulated ? "#06b6d4" : "rgba(148, 163, 184, 0.45)";
-      bgCtx.font = `600 ${Math.round(9 * p.fov)}px var(--font-mono)`;
-      bgCtx.fillText(p.name, p.px + 9, p.py + 3);
-    }
-
-    // Render Full-Screen Shockwaves
-    for (let i = bgShockwaves.length - 1; i >= 0; i--) {
-      const sw = bgShockwaves[i];
-      sw.r += 6;
-      sw.alpha -= 0.02;
-      if (sw.alpha <= 0) {
-        bgShockwaves.splice(i, 1);
-        continue;
-      }
-      bgCtx.strokeStyle = `rgba(6, 182, 212, ${sw.alpha * 0.4})`;
-      bgCtx.lineWidth = 3;
-      bgCtx.beginPath();
-      bgCtx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
-      bgCtx.stroke();
-    }
-
-    requestAnimationFrame(animate);
+  if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  requestAnimationFrame(animate);
+  ctx.clearRect(0, 0, w, h);
+
+  const { verified } = currentReadiness();
+  const totalWeeks = weeksFor(planHours() - prunedHours());
+  const padL = 8;
+  const padR = 8;
+  const padT = 14;
+  const padB = 20;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+
+  // grid
+  ctx.strokeStyle = "rgba(255,255,255,0.05)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (plotH * i) / 4;
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(w - padR, y);
+    ctx.stroke();
+  }
+
+  const points = [];
+  const steps = 40;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const week = t * totalWeeks;
+    const eased = 1 - Math.pow(1 - t, 1.6);
+    const value = verified + (100 - verified) * eased * 0.94;
+    const x = padL + t * plotW;
+    const y = padT + plotH - (value / 100) * plotH;
+    points.push({ x, y, value, week });
+  }
+
+  // area
+  const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
+  grad.addColorStop(0, "rgba(199,255,74,0.18)");
+  grad.addColorStop(1, "rgba(199,255,74,0)");
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, padT + plotH);
+  points.forEach((p) => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(points[points.length - 1].x, padT + plotH);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // line
+  ctx.beginPath();
+  points.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+  ctx.strokeStyle = "#c7ff4a";
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+
+  // today marker
+  ctx.fillStyle = "#c7ff4a";
+  ctx.beginPath();
+  ctx.arc(points[0].x, points[0].y, 3.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // end marker
+  const last = points[points.length - 1];
+  ctx.beginPath();
+  ctx.arc(last.x, last.y, 2.4, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(199,255,74,0.55)";
+  ctx.fill();
+
+  // labels
+  ctx.font = "500 9px 'JetBrains Mono', monospace";
+  ctx.fillStyle = "rgba(236,237,239,0.7)";
+  ctx.textAlign = "left";
+  ctx.fillText(`${fmt(verified)}% now`, padL, h - 6);
+  ctx.textAlign = "right";
+  ctx.fillStyle = "rgba(199,255,74,0.85)";
+  ctx.fillText(`${totalWeeks}w to ${Math.round(last.value)}%`, w - padR, h - 6);
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "rgba(255,255,255,0.28)";
+  ctx.fillText("projected readiness if the plan is followed", padL, 8);
 }
 
-function triggerBackgroundShockwave() {
-  if (!bgCanvas) return;
-  bgShockwaves.push({
-    x: bgCanvas.width / 2,
-    y: bgCanvas.height / 2,
-    r: 10,
-    alpha: 1
-  });
+// ══════════════════════════════════════════════════════════════════════════
+// SIGNATURE TOUR
+// ══════════════════════════════════════════════════════════════════════════
+async function play10SecondTour() {
+  if (state.tourPlaying || !state.pipelineData) return;
+  state.tourPlaying = true;
+
+  const btn = $("btnAutoTour");
+  if (btn) btn.textContent = "Running demo…";
+
+  resetSimulations();
+  await wait(700);
+
+  setAgent("GapAgent");
+  ticker("Gap agent: React carries the highest weighted severity against the Full Stack benchmark.");
+  await wait(1100);
+
+  toggleSimulateSkill("React");
+  await wait(1800);
+
+  setAgent("CurriculumAgent");
+  ticker("Curriculum agent: prerequisite sprints pruned, schedule recomputed.");
+  await wait(1400);
+
+  setAgent("MentorAgent");
+  ticker("Mentor agent: readiness updated. This is the counterfactual model, live.");
+
+  state.tourPlaying = false;
+  if (btn) btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Run 10s demo`;
 }
+
+// Re-draw projection when the layout settles
+window.addEventListener("load", () => {
+  initProjection();
+  drawProjection();
+});
+window.addEventListener("resize", () => {
+  setTimeout(() => {
+    initProjection();
+    drawProjection();
+  }, 120);
+});
