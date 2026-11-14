@@ -128,12 +128,12 @@ The system leverages specialized agents, each constrained to a single domain of 
 
 | Agent Name | Architectural Role | Responsibilities & Outputs |
 | :--- | :--- | :--- |
-| **🕵️ Profile Agent** | Schema Ingestion & Credential Audit | Normalizes non-standard skill taxonomies; extracts declared skills; separates verified credentials from self-claims. |
-| **🎯 Gap Agent** | Mathematical Gap Analysis | Evaluates candidate proficiencies against benchmark role matrices; calculates deterministic readiness; sorts gaps by Severity Score. |
-| **🗺️ Curriculum Agent** | Prerequisite DAG Sequencing | Traverses knowledge dependency graphs; constructs ordered modular sprints; allocates realistic cognitive hours. |
-| **📚 Resource Agent** | Resource Catalog Binding | Attaches strictly validated learning materials (1 authoritative free documentation + 1 deep production course) with zero link hallucination. |
-| **📝 Assessor Agent** | Conceptual Probing | Administers targeted diagnostic evaluations focused on architectural principles and common fallacies rather than rote syntax. |
-| **🧠 Mentor Agent** | Dynamic Adaptive Engine | The reactive re-planning orchestrator; intervenes upon diagnostic failure or target role shift by calculating an **Amber Diff** and rewriting the active curriculum graph. |
+| **Profile Agent** | Schema Ingestion & Credential Audit | Normalizes non-standard skill taxonomies; extracts declared skills; separates verified credentials from self-claims. |
+| **Gap Agent** | Mathematical Gap Analysis | Evaluates candidate proficiencies against benchmark role matrices; calculates deterministic readiness; sorts gaps by Severity Score. |
+| **Curriculum Agent** | Prerequisite DAG Sequencing | Traverses knowledge dependency graphs; constructs ordered modular sprints; allocates realistic cognitive hours. |
+| **Resource Agent** | Resource Catalog Binding | Attaches strictly validated learning materials (1 authoritative free documentation + 1 deep production course) with zero link hallucination. |
+| **Assessor Agent** | Conceptual Probing | Administers targeted diagnostic evaluations focused on architectural principles and common fallacies rather than rote syntax. |
+| **Mentor Agent** | Dynamic Adaptive Engine | The reactive re-planning orchestrator; intervenes upon diagnostic failure or target role shift by calculating an **Amber Diff** and rewriting the active curriculum graph. |
 
 ---
 
@@ -162,7 +162,7 @@ Higher-education syllabi typically lag industry shifts by 18–24 months. Evalua
 * The **Mentor Agent** deploys an **Emergency Shock-Absorption Protocol**, dynamically injecting remedial sprints (e.g., *16h Agent Tool Calling & Multi-Agent Loops*) to prevent candidate obsolescence.
 
 ### 5.4 Proof-of-Execution AST Micro-Code Challenge
-To combat trivia memorization and multiple-choice guessing, the Assessor Agent includes an in-browser code fallacy probe. Evaluators inspect real-world code (e.g., React conditional hook violations) and receive immediate AST-level architectural validation.
+ To combat trivia memorization and multiple-choice guessing, the Assessor Agent includes an in-browser code fallacy probe. Evaluators inspect real-world code (e.g., React conditional hook violations) and receive immediate architectural validation from the code-level probe.
 
 ---
 
@@ -228,10 +228,25 @@ Access the application workspace at **[http://localhost:8000](http://localhost:8
 | :--- | :--- |
 | **Public Repository** | Hosted publicly at `https://github.com/abinivesh-m/Skillnexus-ai` |
 | **Branch Governance** | Single trunk-based development branch (`main`) only |
-| **Lightweight Footprint** | Complete repository size is **0.20 MB** (Well below the 10 MB boundary) |
+| **Lightweight Footprint** | Repository remains below the 10 MB submission limit; generated caches and secrets are excluded |
 | **Agentic AI Collaboration** | 6 specialized agents communicating over an observable telemetry stream |
 | **Dynamic Curriculum Adaptivity** | Real-time graph mutation with highlighted amber diffs upon assessment struggle |
 | **Deterministic Reliability** | Zero LLM hallucination of readiness metrics or unauthenticated resource links |
+
+## 9. Evaluation Criteria Evidence
+
+| Evaluation criterion | Evidence in this repository |
+| :--- | :--- |
+| **Code Quality** | FastAPI routes, deterministic domain calculations, agent definitions, Gemini adapter, and static UI are separated by responsibility. |
+| **Security** | `.env` is ignored and never committed; `.env.example` contains placeholders only; user/content strings are escaped before client rendering. |
+| **Efficiency** | Lightweight JSON data, no frontend framework bundle, cached AI question generation, bounded audit history, and deterministic local fallbacks. |
+| **Testing** | `python -m pytest -q tests/test_domain_and_agents.py` validates domain calculations, gap ranking, curriculum sequencing, and agent behavior. |
+| **Accessibility** | Semantic sections, form labels, dialog roles, keyboard Escape dismissal, visible focus states, responsive layout, and reduced-motion support. |
+| **Problem Alignment** | The complete flow maps directly to profile evidence, skill analysis, career matching, personalized recommendations, progress tracking, and adaptive mentoring. |
+
+### Responsible AI boundary
+
+Gemini handles language-heavy work: diagnostic question generation, optional written-answer grading, and mentor narratives. It does not control readiness percentages, gap severity, time estimates, resource validation, or role-matching arithmetic. Those values are computed by deterministic application code and remain explainable to the learner.
 
 ---
 *SkillNexus-AI — Autonomous Career & Skill Orchestration Engine.*
