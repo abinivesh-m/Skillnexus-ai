@@ -7,6 +7,8 @@
       "headline": "CS Undergraduate @ Rathinam Technical Campus",
       "target_role_id": "full-stack-dev",
       "bio": "Passionate about backend logic and databases. Aspiring to build complete web platforms from frontend to backend.",
+      "certifications": ["Python Essentials", "SQL Foundations"],
+      "projects": ["Campus Event API", "Student Results Dashboard"],
       "skills": [
         { "skill": "Python", "claimed_level": 4, "verified_level": 3, "status": "verified" },
         { "skill": "SQL", "claimed_level": 4, "verified_level": 3, "status": "verified" },
@@ -29,6 +31,8 @@
       "headline": "Junior Data Analyst transitioning to Machine Learning",
       "target_role_id": "ai-ml-engineer",
       "bio": "Strong statistical modeling background, looking to master deep neural architectures and production MLOps.",
+      "certifications": ["Google Data Analytics", "Applied Statistics"],
+      "projects": ["Demand Forecasting Model", "Customer Churn Notebook"],
       "skills": [
         { "skill": "Python", "claimed_level": 5, "verified_level": 4, "status": "verified" },
         { "skill": "Mathematics & Statistics", "claimed_level": 4, "verified_level": 4, "status": "verified" },
@@ -49,6 +53,8 @@
       "headline": "Systems Administrator transitioning to Cloud Architect",
       "target_role_id": "cloud-devops-engineer",
       "bio": "Experienced with bare-metal Linux servers and internal networks; aiming to become an enterprise Kubernetes specialist.",
+      "certifications": ["Linux Administration", "AWS Cloud Practitioner"],
+      "projects": ["Campus Network Monitor", "Containerized Monitoring Stack"],
       "skills": [
         { "skill": "Linux & Shell", "claimed_level": 5, "verified_level": 4, "status": "verified" },
         { "skill": "Networking & Security", "claimed_level": 4, "verified_level": 3, "status": "verified" },

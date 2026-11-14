@@ -172,6 +172,10 @@ function renderProfile(learner, audit) {
   $("learnerHeadline").textContent = learner.headline || "";
   $("learnerAvatar").src = learner.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=learner";
   if (audit) $("auditSummaryBadge").textContent = `${audit.verified_count}/${audit.total_skills} verified`;
+  const assessments = learner.assessments_taken || [];
+  $("assessmentProgress").textContent = `${assessments.length} assessment${assessments.length === 1 ? "" : "s"} · ${assessments.filter((a) => String(a.status).toLowerCase() === "passed").length} passed`;
+  $("certificationList").innerHTML = (learner.certifications || []).map((item) => `<span class="evidence-tag">${esc(item)}</span>`).join("") || `<span class="evidence-tag">No certifications recorded</span>`;
+  $("projectList").innerHTML = (learner.projects || []).map((item) => `<span class="evidence-tag">${esc(item)}</span>`).join("") || `<span class="evidence-tag">No projects recorded</span>`;
   if (state.pipelineData?.target_role) $("readoutTarget").textContent = state.pipelineData.target_role.title;
 }
 
