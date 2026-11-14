@@ -3,6 +3,12 @@ Verification Test Suite for SkillNexus-AI
 Tests deterministic readiness math, multi-agent pipeline, and adaptive diff generation.
 """
 
+import sys
+from pathlib import Path
+
+# Ensure root directory is in sys.path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from domain import (
     load_roles,
     get_role_by_id,
