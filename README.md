@@ -3,11 +3,21 @@
 
 Live application: **https://skillnexus-ai.vercel.app**
 
-**Chosen vertical:** Education and Workforce Development / Personalized Learning
+### Chosen Vertical: Education & Workforce Upskilling
 
-**Approach:** SkillNexus profiles a learner, separates claimed skills from demonstrated skills, compares verified capability against a target role, recommends prerequisite-sequenced resources, and adapts the roadmap after assessments or career-goal changes.
+Education and workforce development / personalized learning.
 
-**Key assumption:** readiness arithmetic must remain explainable and deterministic. Gemini generates questions and mentor language, but never invents readiness scores, gap severity, time estimates, or career recommendations.
+### Approach and Logic
+
+SkillNexus profiles a learner, separates claimed skills from demonstrated skills, compares verified capability against a target role, recommends prerequisite-sequenced resources, and adapts the roadmap after assessments or career-goal changes.
+
+### How the Solution Works
+
+ProfileAgent audits evidence; GapAgent computes weighted gaps; CurriculumAgent sequences prerequisites; ResourceAgent attaches validated resources; AssessorAgent probes uncertain skills; and MentorAgent adapts the roadmap after new evidence. The UI exposes every handoff, score, gap, assessment result, and roadmap mutation.
+
+### Assumptions Made
+
+Readiness arithmetic remains explainable and deterministic. Gemini generates questions and mentor language, but never invents readiness scores, gap severity, time estimates, or career recommendations. Curated scenario modules such as market shocks are clearly presented as simulations, not labor-market forecasts.
 
 ## Judge quickstart
 
