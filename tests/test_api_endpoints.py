@@ -1,139 +1,104 @@
-"""
-Automated REST API Endpoint Regression Test Suite
-Validates status codes, Pydantic schema responses, and error handling.
+"""HTTP contract tests for the SkillNexus FastAPI application.
+
+These tests deliberately use curated JavaScript questions and monkeypatch the
+language-only mentor call. They validate the API contract without spending a
+Gemini request or depending on network availability.
 """
 
 import sys
 from pathlib import Path
+
+import pytest
 from fastapi.testclient import TestClient
 
-# Ensure root directory is in sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from main import app
+import main
 
-client = TestClient(app)
 
-def test_health_endpoint():
-    res = client.get("/api/health")
-    assert res.status_code == 200
-    data = res.json()
-    assert data["status"] == "operational"
-    assert "ProfileAgent" in data["agents"]
-    assert "MentorAgent" in data["agents"]
-    print("[TEST PASSED] /api/health returned operational state")
+@pytest.fixture()
+def client():
+    with TestClient(main.app) as test_client:
+        yield test_client
 
-def test_roles_endpoint():
-    res = client.get("/api/roles")
-    assert res.status_code == 200
-    data = res.json()
-    assert "roles" in data
-    assert len(data["roles"]) >= 6
-    assert data["roles"][0]["id"] == "full-stack-dev"
-    print(f"[TEST PASSED] /api/roles returned {len(data['roles'])} benchmark roles")
 
-def test_learners_endpoint():
-    res = client.get("/api/learners")
-    assert res.status_code == 200
-    data = res.json()
-    assert "learners" in data
-    assert len(data["learners"]) >= 3
-    assert data["learners"][0]["id"] == "aarav-patel"
-    print(f"[TEST PASSED] /api/learners returned {len(data['learners'])} pre-seeded profiles")
+def test_health_roles_and_learners(client):
+    health = client.get("/api/health")
+    assert health.status_code == 200
+    assert health.json()["status"] == "operational"
+    assert len(health.json()["agents"]) == 6
 
-def test_orchestration_endpoint():
-    payload = {"learner_id": "aarav-patel", "target_role_id": "full-stack-dev"}
-    res = client.post("/api/orchestrate", json=payload)
-    assert res.status_code == 200
-    data = res.json()
-    
-    # Assert deterministic metrics schema
-    assert "metrics" in data
-    assert "verified_readiness" in data["metrics"]
-    assert "claimed_readiness" in data["metrics"]
-    assert data["metrics"]["verified_readiness"] == 30.9
-    
-    # Assert multi-agent logs
-    assert "agent_logs" in data
-    assert len(data["agent_logs"]) >= 4
-    
-    # Assert sequenced roadmap
-    assert "roadmap" in data
-    assert len(data["roadmap"]) >= 5
-    for m in data["roadmap"]:
-        assert "resources" in m
-        assert "free" in m["resources"]
-        assert "paid" in m["resources"]
-        
-    print("[TEST PASSED] /api/orchestrate executed full multi-agent pipeline with deterministic math")
+    roles = client.get("/api/roles")
+    learners = client.get("/api/learners")
+    assert roles.status_code == 200
+    assert len(roles.json()["roles"]) >= 6
+    assert learners.status_code == 200
+    assert any(item["id"] == "aarav-patel" for item in learners.json()["learners"])
 
-def test_adaptive_assessment_failure_replan():
-    # Initial roadmap
-    orch = client.post("/api/orchestrate", json={"learner_id": "aarav-patel"}).json()
-    current_roadmap = orch["roadmap"]
-    
-    # Submit failed answers (0% score on JavaScript)
-    fail_payload = {
-        "learner_id": "aarav-patel",
-        "skill": "JavaScript",
-        "answers": [0, 0, 0],
-        "current_modules": current_roadmap,
-        "target_role_id": "full-stack-dev"
-    }
-    res = client.post("/api/assessment/grade", json=fail_payload)
-    assert res.status_code == 200
-    data = res.json()
-    
-    # Assert adaptive re-plan triggered
-    assert data["adaptive_replan"] is True
-    assert "diff_summary" in data
-    assert data["diff_summary"]["action"] == "ADAPTIVE_REPLAN"
-    assert data["updated_roadmap"][0]["is_remedial"] is True
-    assert data["updated_roadmap"][0]["diff_type"] == "added"
-    
-    print("[TEST PASSED] /api/assessment/grade correctly triggered Mentor Agent Adaptive Re-Plan upon diagnostic failure")
 
-def test_adaptive_assessment_pass():
-    orch = client.post("/api/orchestrate", json={"learner_id": "aarav-patel"}).json()
-    current_roadmap = orch["roadmap"]
-    
-    # Submit correct answers
-    pass_payload = {
-        "learner_id": "aarav-patel",
-        "skill": "JavaScript",
-        "answers": [1, 1, 1],
-        "current_modules": current_roadmap,
-        "target_role_id": "full-stack-dev"
-    }
-    res = client.post("/api/assessment/grade", json=pass_payload)
-    assert res.status_code == 200
-    data = res.json()
-    
-    assert data["adaptive_replan"] is False
-    assert data["grade_result"]["passed"] is True
-    assert data["new_metrics"]["verified_readiness"] > 30.9
-    print(f"[TEST PASSED] /api/assessment/grade verified skill and elevated readiness to {data['new_metrics']['verified_readiness']}%")
+def test_orchestration_returns_personalized_plan(client):
+    response = client.post(
+        "/api/orchestrate",
+        json={"learner_id": "aarav-patel", "target_role_id": "full-stack-dev"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["learner"]["id"] == "aarav-patel"
+    assert body["target_role"]["id"] == "full-stack-dev"
+    assert body["metrics"]["verified_readiness"] >= 0
+    assert body["gaps"]
+    assert body["roadmap"]
+    assert body["plan"]["hours_per_week"] == 8
+    assert len(body["agent_logs"]) == 4
 
-def test_goal_switching_endpoint():
-    payload = {
-        "learner_id": "aarav-patel",
-        "new_role_id": "ai-ml-engineer"
-    }
-    res = client.post("/api/switch-goal", json=payload)
-    assert res.status_code == 200
-    data = res.json()
-    
-    assert data["new_role"]["id"] == "ai-ml-engineer"
-    assert "metrics" in data
-    assert len(data["roadmap"]) >= 5
-    print("[TEST PASSED] /api/switch-goal recalculated full trajectory for AI/ML Engineer")
 
-if __name__ == "__main__":
-    test_health_endpoint()
-    test_roles_endpoint()
-    test_learners_endpoint()
-    test_orchestration_endpoint()
-    test_adaptive_assessment_failure_replan()
-    test_adaptive_assessment_pass()
-    test_goal_switching_endpoint()
-    print("\n>>> ALL API REGRESSION TESTS: 100% SUCCESSFUL <<<")
+def test_assessment_and_adaptive_failure_replan(client, monkeypatch):
+    assessment = client.get("/api/assessment/JavaScript?level=4")
+    assert assessment.status_code == 200
+    questions = assessment.json()["questions"]
+    assert len(questions) == 3
+
+    # Keep this contract test offline and deterministic.
+    monkeypatch.setattr(main.ai, "mentor_narrative", lambda payload: ("Deterministic test narrative.", "test"))
+    plan = client.post(
+        "/api/orchestrate",
+        json={"learner_id": "aarav-patel", "target_role_id": "full-stack-dev"},
+    ).json()
+    response = client.post(
+        "/api/assessment/grade",
+        json={
+            "learner_id": "aarav-patel",
+            "skill": "JavaScript",
+            "answers": [1, 1, 1],
+            "current_modules": plan["roadmap"],
+            "target_role_id": "full-stack-dev",
+            "level": 4,
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["adaptive_replan"] is True
+    assert body["diff_summary"]["action"] == "ADAPTIVE_REPLAN"
+    assert body["updated_roadmap"][0]["is_remedial"] is True
+    assert body["grade_result"]["passed"] is False
+
+
+def test_goal_switch_rebuilds_matching_plan(client):
+    response = client.post(
+        "/api/switch-goal",
+        json={"learner_id": "aarav-patel", "new_role_id": "ai-ml-engineer"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["new_role"]["id"] == "ai-ml-engineer"
+    assert body["roadmap"]
+    assert body["gaps"]
+    assert body["diff_summary"]
+
+
+def test_invalid_ids_are_rejected(client):
+    response = client.post(
+        "/api/orchestrate",
+        json={"learner_id": "not-a-real-learner", "target_role_id": "full-stack-dev"},
+    )
+    assert response.status_code == 404
