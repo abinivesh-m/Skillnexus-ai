@@ -1,157 +1,216 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 620" width="100%" height="100%" style="background:#0c0f17; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
   <defs>
-    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.06"/>
+    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.6"/>
     </filter>
-    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 10 5 L 0 9 z" fill="#857f74"/>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="violetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <marker id="cyanArrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#06b6d4"/>
     </marker>
     <marker id="amberArrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 10 5 L 0 9 z" fill="#b45309"/>
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b"/>
     </marker>
   </defs>
 
-  <!-- Title Block -->
-  <text x="40" y="40" font-size="20" font-weight="700" fill="#1e1b18" font-family="Georgia, serif">SkillNexus-AI Architecture Specification</text>
-  <text x="40" y="60" font-size="12" fill="#857f74">Multi-Agent Reactive Collaboration &amp; Deterministic Gap Analysis</text>
+  <!-- Title Header -->
+  <text x="50" y="45" font-size="22" font-weight="800" fill="#ffffff" letter-spacing="-0.5">SkillNexus-AI: System Architecture &amp; Data Pipeline</text>
+  <text x="50" y="68" font-size="12" fill="#94a3b8">Autonomous Multi-Agent Orchestration with Deterministic Euclidean Readiness Modeling</text>
 
-  <!-- Layer 1: Data Ingestion (x=40, y=90, w=260, h=390) -->
-  <g transform="translate(40, 90)" filter="url(#shadow)">
-    <rect width="260" height="390" rx="8" fill="#fbf9f5" stroke="#e6dfd3"/>
-    <rect width="260" height="34" rx="8" fill="#f3efe6"/>
-    <text x="15" y="22" font-size="12" font-weight="700" fill="#57524b">1. INGESTION &amp; BENCHMARKS</text>
+  <!-- 3 Main Architecture Tiers -->
 
-    <!-- Block 1: Profile Store -->
-    <g transform="translate(15, 50)">
-      <rect width="230" height="70" rx="6" fill="#ffffff" stroke="#e6dfd3"/>
-      <text x="12" y="20" font-size="11" font-weight="700" fill="#1e1b18">Learner Credentials</text>
-      <text x="12" y="36" font-size="9" fill="#57524b">Self-Reported Claimed Skills</text>
-      <text x="12" y="50" font-size="9" fill="#857f74">Historical Assessment Registry</text>
+  <!-- TIER 1: Ingestion & Ontologies (x=50, y=95, w=280, h=490) -->
+  <g transform="translate(50, 95)" filter="url(#cardShadow)">
+    <rect width="280" height="490" rx="12" fill="rgba(18, 22, 34, 0.85)" stroke="rgba(255, 255, 255, 0.1)"/>
+    <rect width="280" height="38" rx="12" fill="rgba(255, 255, 255, 0.04)"/>
+    <text x="20" y="24" font-size="11" font-family="monospace" font-weight="700" fill="#06b6d4" letter-spacing="1">1. INGESTION &amp; ONTOLOGIES</text>
+
+    <!-- Card 1: Learner Credentials -->
+    <g transform="translate(18, 55)">
+      <rect width="244" height="95" rx="8" fill="rgba(255, 255, 255, 0.02)" stroke="rgba(255, 255, 255, 0.08)"/>
+      <rect width="4" height="95" rx="2" fill="url(#emeraldGrad)"/>
+      <text x="14" y="22" font-size="12" font-weight="700" fill="#ffffff">Learner Dossier Ingestion</text>
+      <text x="14" y="40" font-size="10" fill="#94a3b8">• Self-Reported Claimed Skills (1–5)</text>
+      <text x="14" y="56" font-size="10" fill="#94a3b8">• Diagnostic Assessment History</text>
+      <text x="14" y="72" font-size="10" fill="#94a3b8">• Project Artifacts &amp; Transcripts</text>
+      <text x="14" y="88" font-size="9" font-family="monospace" fill="#10b981">Verified State Registry</text>
     </g>
 
-    <!-- Block 2: Industry Role Benchmarks -->
-    <g transform="translate(15, 135)">
-      <rect width="230" height="85" rx="6" fill="#ffffff" stroke="#e6dfd3"/>
-      <text x="12" y="20" font-size="11" font-weight="700" fill="#1e1b18">Role Benchmark Ontologies</text>
-      <text x="12" y="36" font-size="9" fill="#57524b">6 Benchmark Roles (Full Stack, AI...)</text>
-      <text x="12" y="50" font-size="9" fill="#57524b">Skill Weights (1–5) &amp; Req. Levels (1–5)</text>
-      <text x="12" y="65" font-size="9" fill="#857f74">Prerequisite Dependency Graph (DAG)</text>
+    <!-- Card 2: Industry Role Benchmarks -->
+    <g transform="translate(18, 165)">
+      <rect width="244" height="115" rx="8" fill="rgba(255, 255, 255, 0.02)" stroke="rgba(255, 255, 255, 0.08)"/>
+      <rect width="4" height="115" rx="2" fill="url(#cyanGrad)"/>
+      <text x="14" y="22" font-size="12" font-weight="700" fill="#ffffff">Industry Role Benchmarks</text>
+      <text x="14" y="40" font-size="10" fill="#94a3b8">• 6 Enterprise Career Profiles</text>
+      <text x="14" y="56" font-size="10" fill="#94a3b8">• Skill Weight Matrices (W: 1–5)</text>
+      <text x="14" y="72" font-size="10" fill="#94a3b8">• Proficiency Thresholds (Req: 1–5)</text>
+      <text x="14" y="88" font-size="10" fill="#94a3b8">• Prerequisite DAG Dependencies</text>
+      <text x="14" y="104" font-size="9" font-family="monospace" fill="#06b6d4">Standardized Market Baseline</text>
     </g>
 
-    <!-- Block 3: Curated Resource Catalog -->
-    <g transform="translate(15, 235)">
-      <rect width="230" height="70" rx="6" fill="#ffffff" stroke="#e6dfd3"/>
-      <text x="12" y="20" font-size="11" font-weight="700" fill="#1e1b18">Authenticated Resource Index</text>
-      <text x="12" y="36" font-size="9" fill="#57524b">1 Free Official Documentation</text>
-      <text x="12" y="50" font-size="9" fill="#57524b">1 Deep Dive Production Course</text>
-    </g>
-  </g>
-
-  <!-- Connectors from Layer 1 to Layer 2 -->
-  <line x1="300" y1="210" x2="350" y2="210" stroke="#857f74" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="300" y1="360" x2="350" y2="360" stroke="#857f74" stroke-width="1.5" marker-end="url(#arrow)"/>
-
-  <!-- Layer 2: 6 Specialized Agent Swarm (x=350, y=90, w=340, h=390) -->
-  <g transform="translate(350, 90)" filter="url(#shadow)">
-    <rect width="340" height="390" rx="8" fill="#fbf9f5" stroke="#e6dfd3"/>
-    <rect width="340" height="34" rx="8" fill="#f3efe6"/>
-    <text x="15" y="22" font-size="12" font-weight="700" fill="#57524b">2. SPECIALIZED MULTI-AGENT SWARM</text>
-
-    <!-- Agent 1 & 2 -->
-    <g transform="translate(15, 45)">
-      <rect width="145" height="58" rx="5" fill="#ffffff" stroke="#10b981"/>
-      <text x="10" y="18" font-size="10" font-weight="700" fill="#047857">🕵️ Profile Agent</text>
-      <text x="10" y="32" font-size="8" fill="#57524b">Parses claims vs verified</text>
-      <text x="10" y="44" font-size="8" fill="#857f74">Normalizes skill schemas</text>
+    <!-- Card 3: Authenticated Resources -->
+    <g transform="translate(18, 295)">
+      <rect width="244" height="95" rx="8" fill="rgba(255, 255, 255, 0.02)" stroke="rgba(255, 255, 255, 0.08)"/>
+      <rect width="4" height="95" rx="2" fill="url(#violetGrad)"/>
+      <text x="14" y="22" font-size="12" font-weight="700" fill="#ffffff">Curated Resource Catalog</text>
+      <text x="14" y="40" font-size="10" fill="#94a3b8">• Tier 1: Authoritative Free (MDN, Specs)</text>
+      <text x="14" y="56" font-size="10" fill="#94a3b8">• Tier 2: Deep Production Courses</text>
+      <text x="14" y="72" font-size="10" fill="#94a3b8">• 100% Authenticated Target URLs</text>
+      <text x="14" y="88" font-size="9" font-family="monospace" fill="#8b5cf6">Zero Hallucinated Links</text>
     </g>
 
-    <g transform="translate(180, 45)">
-      <rect width="145" height="58" rx="5" fill="#ffffff" stroke="#3b82f6"/>
-      <text x="10" y="18" font-size="10" font-weight="700" fill="#1d4ed8">🎯 Gap Agent</text>
-      <text x="10" y="32" font-size="8" fill="#57524b">Euclidean readiness calc</text>
-      <text x="10" y="44" font-size="8" fill="#857f74">Ranks gaps by severity</text>
-    </g>
-
-    <!-- Agent 3 & 4 -->
-    <g transform="translate(15, 115)">
-      <rect width="145" height="58" rx="5" fill="#ffffff" stroke="#e6dfd3"/>
-      <text x="10" y="18" font-size="10" font-weight="700" fill="#1e1b18">🗺️ Curriculum Agent</text>
-      <text x="10" y="32" font-size="8" fill="#57524b">DAG topological order</text>
-      <text x="10" y="44" font-size="8" fill="#857f74">Hours &amp; outcome pacing</text>
-    </g>
-
-    <g transform="translate(180, 115)">
-      <rect width="145" height="58" rx="5" fill="#ffffff" stroke="#e6dfd3"/>
-      <text x="10" y="18" font-size="10" font-weight="700" fill="#1e1b18">📚 Resource Agent</text>
-      <text x="10" y="32" font-size="8" fill="#57524b">Maps 1 Free + 1 Paid</text>
-      <text x="10" y="44" font-size="8" fill="#857f74">Strict zero-hallucination</text>
-    </g>
-
-    <!-- Agent 5 & 6 (The Adaptive Loop) -->
-    <g transform="translate(15, 185)">
-      <rect width="145" height="65" rx="5" fill="#ffffff" stroke="#f43f5e"/>
-      <text x="10" y="18" font-size="10" font-weight="700" fill="#be123c">📝 Assessor Agent</text>
-      <text x="10" y="32" font-size="8" fill="#57524b">Diagnostic test banks</text>
-      <text x="10" y="44" font-size="8" fill="#857f74">Concepts vs trivia grading</text>
-    </g>
-
-    <g transform="translate(180, 185)">
-      <rect width="145" height="65" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
-      <text x="10" y="18" font-size="10" font-weight="700" fill="#b45309">🧠 Mentor Agent</text>
-      <text x="10" y="32" font-size="8" fill="#78350f">Adaptive Re-planning</text>
-      <text x="10" y="44" font-size="8" fill="#b45309">Computes AMBER DIFF</text>
-      <text x="10" y="56" font-size="8" fill="#78350f">Injects remedial sprint</text>
-    </g>
-
-    <!-- State Bus -->
-    <g transform="translate(15, 270)">
-      <rect width="310" height="95" rx="6" fill="#25221e"/>
-      <text x="15" y="24" font-size="11" font-weight="700" fill="#f59e0b">Event-Driven Handoff Bus (Live Stream)</text>
-      <text x="15" y="42" font-size="9" font-family="monospace" fill="#e6dfd3">• Profile Agent audited 8 skills (3 verified, 5 gaps)</text>
-      <text x="15" y="58" font-size="9" font-family="monospace" fill="#e6dfd3">• Gap Agent calculated readiness: 30.9%</text>
-      <text x="15" y="74" font-size="9" font-family="monospace" fill="#10b981">• Assessor Agent → Mentor Agent: Intervention active</text>
+    <!-- Card 4: Assessment Test Banks -->
+    <g transform="translate(18, 405)">
+      <rect width="244" height="65" rx="8" fill="rgba(255, 255, 255, 0.02)" stroke="rgba(255, 255, 255, 0.08)"/>
+      <rect width="4" height="65" rx="2" fill="url(#amberGrad)"/>
+      <text x="14" y="20" font-size="12" font-weight="700" fill="#ffffff">Diagnostic Assessment Bank</text>
+      <text x="14" y="38" font-size="10" fill="#94a3b8">• Conceptual Fallacy Detectors</text>
+      <text x="14" y="54" font-size="9" font-family="monospace" fill="#f59e0b">Real-Time Evaluation Probes</text>
     </g>
   </g>
 
-  <!-- Connectors from Layer 2 to Layer 3 -->
-  <line x1="690" y1="210" x2="740" y2="210" stroke="#857f74" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <path d="M 740 380 Q 715 380 690 350" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="3" marker-end="url(#amberArrow)"/>
+  <!-- Flow Arrows Tier 1 -> Tier 2 -->
+  <line x1="330" y1="215" x2="390" y2="215" stroke="#06b6d4" stroke-width="2" marker-end="url(#cyanArrow)"/>
+  <line x1="330" y1="340" x2="390" y2="340" stroke="#06b6d4" stroke-width="2" marker-end="url(#cyanArrow)"/>
 
-  <!-- Layer 3: Reactive 3D UI / Presentation Layer (x=740, y=90, w=220, h=390) -->
-  <g transform="translate(740, 90)" filter="url(#shadow)">
-    <rect width="220" height="390" rx="8" fill="#fbf9f5" stroke="#e6dfd3"/>
-    <rect width="220" height="34" rx="8" fill="#f3efe6"/>
-    <text x="15" y="22" font-size="12" font-weight="700" fill="#57524b">3. REACTIVE UI</text>
+  <!-- TIER 2: 6 Specialized Collaborative Agents (x=390, y=95, w=380, h=490) -->
+  <g transform="translate(390, 95)" filter="url(#cardShadow)">
+    <rect width="380" height="490" rx="12" fill="rgba(18, 22, 34, 0.85)" stroke="rgba(255, 255, 255, 0.1)"/>
+    <rect width="380" height="38" rx="12" fill="rgba(255, 255, 255, 0.04)"/>
+    <text x="20" y="24" font-size="11" font-family="monospace" font-weight="700" fill="#06b6d4" letter-spacing="1">2. MULTI-AGENT SWARM ENGINE</text>
 
-    <!-- Card 1: 3D Ring Gauge -->
-    <g transform="translate(15, 50)">
-      <rect width="190" height="85" rx="6" fill="#ffffff" stroke="#e6dfd3"/>
-      <text x="12" y="20" font-size="10" font-weight="700" fill="#1e1b18">3D Readiness Ring</text>
-      <text x="12" y="38" font-size="16" font-weight="800" fill="#10b981">30.9%</text>
-      <text x="65" y="38" font-size="9" fill="#857f74">(Claimed 53.6%)</text>
-      <text x="12" y="55" font-size="8" fill="#be123c">Credibility Delta: -22.7%</text>
-      <text x="12" y="70" font-size="8" fill="#57524b">Perspective Mouse Tilt (3D)</text>
+    <!-- Agent Grid -->
+    <!-- Profile Agent -->
+    <g transform="translate(18, 50)">
+      <rect width="165" height="70" rx="8" fill="rgba(16, 185, 129, 0.06)" stroke="rgba(16, 185, 129, 0.3)"/>
+      <text x="12" y="20" font-size="11" font-weight="700" fill="#10b981">🕵️ Profile Agent</text>
+      <text x="12" y="36" font-size="9" fill="#94a3b8">Audits claimed vs verified</text>
+      <text x="12" y="50" font-size="9" fill="#94a3b8">Normalizes skill schemas</text>
+      <text x="12" y="63" font-size="8" font-family="monospace" fill="#10b981">Handoff → Gap Agent</text>
     </g>
 
-    <!-- Card 2: Amber Diff View -->
-    <g transform="translate(15, 145)">
-      <rect width="190" height="95" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
-      <text x="12" y="20" font-size="10" font-weight="800" fill="#b45309">⚡ Amber Diff Banner</text>
-      <text x="12" y="36" font-size="9" fill="#78350f">Live Roadmap Rewriting</text>
-      <text x="12" y="50" font-size="8" fill="#78350f">+12h Remedial Scope Sprint</text>
-      <text x="12" y="64" font-size="8" fill="#78350f">Dependent React delayed</text>
-      <text x="12" y="80" font-size="8" font-weight="700" fill="#b45309">Physical on-screen diff</text>
+    <!-- Gap Agent -->
+    <g transform="translate(195, 50)">
+      <rect width="165" height="70" rx="8" fill="rgba(6, 182, 212, 0.06)" stroke="rgba(6, 182, 212, 0.3)"/>
+      <text x="12" y="20" font-size="11" font-weight="700" fill="#06b6d4">🎯 Gap Agent</text>
+      <text x="12" y="36" font-size="9" fill="#94a3b8">Euclidean math calculator</text>
+      <text x="12" y="50" font-size="9" fill="#94a3b8">Ranks severity: Δ · Weight</text>
+      <text x="12" y="63" font-size="8" font-family="monospace" fill="#06b6d4">Handoff → Curriculum</text>
     </g>
 
-    <!-- Card 3: Teleprompter -->
-    <g transform="translate(15, 250)">
-      <rect width="190" height="115" rx="6" fill="#ffffff" stroke="#e6dfd3"/>
-      <text x="12" y="20" font-size="10" font-weight="700" fill="#1e1b18">🎤 90s Judge Teleprompter</text>
-      <text x="12" y="38" font-size="8" fill="#57524b">1. Problem statement hook</text>
-      <text x="12" y="52" font-size="8" fill="#57524b">2. Aarav Patel (30.9% fit)</text>
-      <text x="12" y="66" font-size="8" fill="#57524b">3. React/Node critical gaps</text>
-      <text x="12" y="80" font-size="8" fill="#b45309">4. Check-in fail → Re-plan</text>
-      <text x="12" y="94" font-size="8" fill="#57524b">5. Verifiable math close</text>
+    <!-- Curriculum Agent -->
+    <g transform="translate(18, 130)">
+      <rect width="165" height="70" rx="8" fill="rgba(139, 92, 246, 0.06)" stroke="rgba(139, 92, 246, 0.3)"/>
+      <text x="12" y="20" font-size="11" font-weight="700" fill="#8b5cf6">🗺️ Curriculum Agent</text>
+      <text x="12" y="36" font-size="9" fill="#94a3b8">Topological DAG sort</text>
+      <text x="12" y="50" font-size="9" fill="#94a3b8">Estimates cognitive hours</text>
+      <text x="12" y="63" font-size="8" font-family="monospace" fill="#8b5cf6">Handoff → Resource</text>
+    </g>
+
+    <!-- Resource Agent -->
+    <g transform="translate(195, 130)">
+      <rect width="165" height="70" rx="8" fill="rgba(255, 255, 255, 0.03)" stroke="rgba(255, 255, 255, 0.1)"/>
+      <text x="12" y="20" font-size="11" font-weight="700" fill="#ffffff">📚 Resource Agent</text>
+      <text x="12" y="36" font-size="9" fill="#94a3b8">Binds 1 Free + 1 Paid</text>
+      <text x="12" y="50" font-size="9" fill="#94a3b8">Zero-hallucination verification</text>
+      <text x="12" y="63" font-size="8" font-family="monospace" fill="#94a3b8">Handoff → Assessor</text>
+    </g>
+
+    <!-- Assessor Agent -->
+    <g transform="translate(18, 210)">
+      <rect width="165" height="70" rx="8" fill="rgba(244, 63, 94, 0.06)" stroke="rgba(244, 63, 94, 0.3)"/>
+      <text x="12" y="20" font-size="11" font-weight="700" fill="#f43f5e">📝 Assessor Agent</text>
+      <text x="12" y="36" font-size="9" fill="#94a3b8">Concept diagnostic check-ins</text>
+      <text x="12" y="50" font-size="9" fill="#94a3b8">Evaluates conceptual depth</text>
+      <text x="12" y="63" font-size="8" font-family="monospace" fill="#f43f5e">Handoff → Mentor</text>
+    </g>
+
+    <!-- Mentor Agent (Adaptive Core) -->
+    <g transform="translate(195, 210)">
+      <rect width="165" height="70" rx="8" fill="rgba(245, 158, 11, 0.08)" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="12" y="20" font-size="11" font-weight="800" fill="#f59e0b">🧠 Mentor Agent</text>
+      <text x="12" y="36" font-size="9" fill="#fde68a">Adaptive Re-planning</text>
+      <text x="12" y="50" font-size="9" fill="#fde68a">Computes Amber Diff</text>
+      <text x="12" y="63" font-size="8" font-family="monospace" fill="#f59e0b">Rewrites Curriculum</text>
+    </g>
+
+    <!-- Telemetry Bus -->
+    <g transform="translate(18, 300)">
+      <rect width="342" height="170" rx="8" fill="#07090e" stroke="rgba(6, 182, 212, 0.2)"/>
+      <text x="15" y="24" font-size="11" font-family="monospace" font-weight="700" fill="#06b6d4">Real-Time Event Handoff Stream</text>
+      <line x1="15" y1="34" x2="325" y2="34" stroke="rgba(255, 255, 255, 0.08)"/>
+
+      <text x="15" y="55" font-size="9" font-family="monospace" fill="#94a3b8">[09:45:01] ProfileAgent: 8 skills audited · 3 verified, 5 gaps</text>
+      <text x="15" y="75" font-size="9" font-family="monospace" fill="#94a3b8">[09:45:02] GapAgent: Euclidean fit calculated = 30.9%</text>
+      <text x="15" y="95" font-size="9" font-family="monospace" fill="#94a3b8">[09:45:03] CurriculumAgent: 6 DAG sprints sequenced (118h)</text>
+      <text x="15" y="115" font-size="9" font-family="monospace" fill="#94a3b8">[09:45:04] ResourceAgent: 12 authenticated URLs attached</text>
+      <text x="15" y="135" font-size="9" font-family="monospace" fill="#f59e0b">[09:45:08] MentorAgent: Intervention active · Remedial module</text>
+      <text x="15" y="155" font-size="8" font-family="monospace" fill="#10b981">● All 6 Specialized Agents Synchronized</text>
+    </g>
+  </g>
+
+  <!-- Flow Arrows Tier 2 -> Tier 3 -->
+  <line x1="770" y1="215" x2="830" y2="215" stroke="#06b6d4" stroke-width="2" marker-end="url(#cyanArrow)"/>
+  <path d="M 830 380 Q 800 380 770 340" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4" marker-end="url(#amberArrow)"/>
+
+  <!-- TIER 3: Presentation & Adaptive 3D UI (x=830, y=95, w=220, h=490) -->
+  <g transform="translate(830, 95)" filter="url(#cardShadow)">
+    <rect width="220" height="490" rx="12" fill="rgba(18, 22, 34, 0.85)" stroke="rgba(255, 255, 255, 0.1)"/>
+    <rect width="220" height="38" rx="12" fill="rgba(255, 255, 255, 0.04)"/>
+    <text x="15" y="24" font-size="11" font-family="monospace" font-weight="700" fill="#06b6d4" letter-spacing="1">3. REACTIVE UI TIER</text>
+
+    <!-- Component 1: 3D Galaxy Canvas -->
+    <g transform="translate(14, 50)">
+      <rect width="192" height="90" rx="8" fill="rgba(255, 255, 255, 0.02)" stroke="rgba(255, 255, 255, 0.08)"/>
+      <text x="12" y="22" font-size="11" font-weight="700" fill="#ffffff">Persistent 3D Galaxy</text>
+      <text x="12" y="40" font-size="9" fill="#94a3b8">• 60 FPS Canvas Constellation</text>
+      <text x="12" y="56" font-size="9" fill="#94a3b8">• Interactive Mouse Parallax</text>
+      <text x="12" y="72" font-size="9" fill="#94a3b8">• Visual Knowledge Nodes</text>
+      <text x="12" y="85" font-size="8" font-family="monospace" fill="#06b6d4">Zero External Libs</text>
+    </g>
+
+    <!-- Component 2: What-If Simulation -->
+    <g transform="translate(14, 150)">
+      <rect width="192" height="95" rx="8" fill="rgba(6, 182, 212, 0.06)" stroke="rgba(6, 182, 212, 0.3)"/>
+      <text x="12" y="22" font-size="11" font-weight="700" fill="#06b6d4">What-If Simulation HUD</text>
+      <text x="12" y="40" font-size="9" fill="#94a3b8">• Counterfactual Toggles</text>
+      <text x="12" y="56" font-size="9" fill="#94a3b8">• Real-time Readiness Surge</text>
+      <text x="12" y="72" font-size="9" fill="#94a3b8">• Time-to-Hire: 18w → 12w</text>
+      <text x="12" y="88" font-size="8" font-family="monospace" fill="#10b981">Dynamic Math Model</text>
+    </g>
+
+    <!-- Component 3: Amber Diff View -->
+    <g transform="translate(14, 255)">
+      <rect width="192" height="105" rx="8" fill="rgba(245, 158, 11, 0.08)" stroke="#f59e0b"/>
+      <text x="12" y="22" font-size="11" font-weight="800" fill="#f59e0b">⚡ Amber Diff Banner</text>
+      <text x="12" y="40" font-size="9" fill="#fde68a">• Real-time Roadmap Diff</text>
+      <text x="12" y="56" font-size="9" fill="#fde68a">• Injects Remedial Sprint</text>
+      <text x="12" y="72" font-size="9" fill="#fde68a">• Defers Dependent React</text>
+      <text x="12" y="88" font-size="8" font-family="monospace" fill="#f59e0b">Visible Adaptivity Proof</text>
+    </g>
+
+    <!-- Component 4: Inspection & Diagnostics -->
+    <g transform="translate(14, 370)">
+      <rect width="192" height="100" rx="8" fill="rgba(255, 255, 255, 0.02)" stroke="rgba(255, 255, 255, 0.08)"/>
+      <text x="12" y="22" font-size="11" font-weight="700" fill="#ffffff">Diagnostic Probes</text>
+      <text x="12" y="40" font-size="9" fill="#94a3b8">• Interactive Check-in Quiz</text>
+      <text x="12" y="56" font-size="9" fill="#94a3b8">• Automated Grading</text>
+      <text x="12" y="72" font-size="9" fill="#94a3b8">• Instant Re-plan Feedback</text>
+      <text x="12" y="88" font-size="8" font-family="monospace" fill="#06b6d4">Dual Execution Engine</text>
     </g>
   </g>
 </svg>
