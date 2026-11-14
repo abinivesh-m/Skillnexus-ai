@@ -1,0 +1,66 @@
+{
+  "learners": [
+    {
+      "id": "aarav-patel",
+      "name": "Aarav Patel",
+      "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Aarav",
+      "headline": "CS Undergraduate @ Rathinam Technical Campus",
+      "target_role_id": "full-stack-dev",
+      "bio": "Passionate about backend logic and databases. Aspiring to build complete web platforms from frontend to backend.",
+      "skills": [
+        { "skill": "Python", "claimed_level": 4, "verified_level": 3, "status": "verified" },
+        { "skill": "SQL", "claimed_level": 4, "verified_level": 3, "status": "verified" },
+        { "skill": "HTML/CSS", "claimed_level": 3, "verified_level": 2, "status": "unverified" },
+        { "skill": "JavaScript", "claimed_level": 2, "verified_level": 0, "status": "unverified" },
+        { "skill": "React", "claimed_level": 1, "verified_level": 0, "status": "unverified" },
+        { "skill": "Node.js", "claimed_level": 0, "verified_level": 0, "status": "missing" },
+        { "skill": "REST APIs", "claimed_level": 2, "verified_level": 1, "status": "unverified" },
+        { "skill": "Git & CI/CD", "claimed_level": 2, "verified_level": 1, "status": "unverified" }
+      ],
+      "assessments_taken": [
+        { "skill": "Python", "score": 75, "date": "2026-11-10", "status": "Passed" },
+        { "skill": "SQL", "score": 78, "date": "2026-11-12", "status": "Passed" }
+      ]
+    },
+    {
+      "id": "priya-sharma",
+      "name": "Priya Sharma",
+      "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Priya",
+      "headline": "Junior Data Analyst transitioning to Machine Learning",
+      "target_role_id": "ai-ml-engineer",
+      "bio": "Strong statistical modeling background, looking to master deep neural architectures and production MLOps.",
+      "skills": [
+        { "skill": "Python", "claimed_level": 5, "verified_level": 4, "status": "verified" },
+        { "skill": "Mathematics & Statistics", "claimed_level": 4, "verified_level": 4, "status": "verified" },
+        { "skill": "SQL", "claimed_level": 4, "verified_level": 3, "status": "verified" },
+        { "skill": "PyTorch", "claimed_level": 2, "verified_level": 1, "status": "unverified" },
+        { "skill": "LLM Orchestration & Prompting", "claimed_level": 3, "verified_level": 1, "status": "unverified" },
+        { "skill": "MLOps & Docker", "claimed_level": 1, "verified_level": 0, "status": "missing" },
+        { "skill": "Vector DBs & RAG", "claimed_level": 2, "verified_level": 0, "status": "missing" }
+      ],
+      "assessments_taken": [
+        { "skill": "Mathematics & Statistics", "score": 88, "date": "2026-11-08", "status": "Passed" }
+      ]
+    },
+    {
+      "id": "rohan-gupta",
+      "name": "Rohan Gupta",
+      "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Rohan",
+      "headline": "Systems Administrator transitioning to Cloud Architect",
+      "target_role_id": "cloud-devops-engineer",
+      "bio": "Experienced with bare-metal Linux servers and internal networks; aiming to become an enterprise Kubernetes specialist.",
+      "skills": [
+        { "skill": "Linux & Shell", "claimed_level": 5, "verified_level": 4, "status": "verified" },
+        { "skill": "Networking & Security", "claimed_level": 4, "verified_level": 3, "status": "verified" },
+        { "skill": "Python", "claimed_level": 3, "verified_level": 2, "status": "verified" },
+        { "skill": "Docker & Containers", "claimed_level": 3, "verified_level": 1, "status": "unverified" },
+        { "skill": "Kubernetes", "claimed_level": 2, "verified_level": 0, "status": "missing" },
+        { "skill": "Terraform / IaC", "claimed_level": 1, "verified_level": 0, "status": "missing" },
+        { "skill": "AWS / GCP", "claimed_level": 2, "verified_level": 1, "status": "unverified" }
+      ],
+      "assessments_taken": [
+        { "skill": "Linux & Shell", "score": 92, "date": "2026-11-05", "status": "Passed" }
+      ]
+    }
+  ]
+}

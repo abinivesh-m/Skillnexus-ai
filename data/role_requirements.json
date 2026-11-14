@@ -1,0 +1,86 @@
+{
+  "roles": [
+    {
+      "id": "full-stack-dev",
+      "title": "Full Stack Developer",
+      "description": "Designs and builds end-to-end web applications, combining frontend user experiences with backend microservices and databases.",
+      "benchmark_skills": [
+        { "skill": "JavaScript", "required_level": 4, "weight": 5, "category": "Frontend Core" },
+        { "skill": "React", "required_level": 4, "weight": 5, "category": "Frontend Frameworks" },
+        { "skill": "Node.js", "required_level": 3, "weight": 4, "category": "Backend Runtime" },
+        { "skill": "SQL", "required_level": 3, "weight": 4, "category": "Data Persistence" },
+        { "skill": "HTML/CSS", "required_level": 4, "weight": 3, "category": "Web Fundamentals" },
+        { "skill": "Python", "required_level": 3, "weight": 3, "category": "General Purpose" },
+        { "skill": "REST APIs", "required_level": 4, "weight": 4, "category": "System Architecture" },
+        { "skill": "Git & CI/CD", "required_level": 3, "weight": 3, "category": "Engineering Practices" }
+      ]
+    },
+    {
+      "id": "ai-ml-engineer",
+      "title": "AI / ML Engineer",
+      "description": "Develops, tunes, and deploys intelligent machine learning models, neural networks, and agentic LLM workflows.",
+      "benchmark_skills": [
+        { "skill": "Python", "required_level": 5, "weight": 5, "category": "Programming Core" },
+        { "skill": "Mathematics & Statistics", "required_level": 4, "weight": 5, "category": "Foundations" },
+        { "skill": "PyTorch", "required_level": 4, "weight": 5, "category": "Deep Learning" },
+        { "skill": "LLM Orchestration & Prompting", "required_level": 4, "weight": 4, "category": "Generative AI" },
+        { "skill": "SQL", "required_level": 3, "weight": 3, "category": "Data Wrangling" },
+        { "skill": "MLOps & Docker", "required_level": 3, "weight": 4, "category": "Production Deployment" },
+        { "skill": "Vector DBs & RAG", "required_level": 4, "weight": 4, "category": "Information Retrieval" }
+      ]
+    },
+    {
+      "id": "cloud-devops-engineer",
+      "title": "Cloud & DevOps Engineer",
+      "description": "Architects resilient, scalable multi-cloud infrastructure, automating continuous delivery and security compliance.",
+      "benchmark_skills": [
+        { "skill": "Linux & Shell", "required_level": 5, "weight": 5, "category": "Systems" },
+        { "skill": "Docker & Containers", "required_level": 4, "weight": 5, "category": "Containerization" },
+        { "skill": "Kubernetes", "required_level": 4, "weight": 5, "category": "Orchestration" },
+        { "skill": "Terraform / IaC", "required_level": 3, "weight": 4, "category": "Infrastructure as Code" },
+        { "skill": "AWS / GCP", "required_level": 4, "weight": 4, "category": "Cloud Providers" },
+        { "skill": "Networking & Security", "required_level": 3, "weight": 3, "category": "Core Infrastructure" },
+        { "skill": "Python", "required_level": 3, "weight": 3, "category": "Automation Scripting" }
+      ]
+    },
+    {
+      "id": "data-engineer",
+      "title": "Data Engineer",
+      "description": "Builds high-throughput ETL data pipelines, lakehouses, and analytical warehouses for enterprise intelligence.",
+      "benchmark_skills": [
+        { "skill": "SQL", "required_level": 5, "weight": 5, "category": "Query Optimization" },
+        { "skill": "Python", "required_level": 4, "weight": 5, "category": "Data Processing" },
+        { "skill": "Apache Spark", "required_level": 4, "weight": 4, "category": "Distributed Compute" },
+        { "skill": "Data Modeling", "required_level": 4, "weight": 4, "category": "Architecture" },
+        { "skill": "Airflow & Orchestration", "required_level": 3, "weight": 4, "category": "Workflow Management" },
+        { "skill": "Kafka", "required_level": 3, "weight": 3, "category": "Event Streaming" }
+      ]
+    },
+    {
+      "id": "cybersecurity-analyst",
+      "title": "Cybersecurity Analyst",
+      "description": "Defends organizational infrastructure against emerging threat vectors, conducts penetration testing, and audits zero-trust postures.",
+      "benchmark_skills": [
+        { "skill": "Networking & Protocols", "required_level": 5, "weight": 5, "category": "Foundations" },
+        { "skill": "Linux & Bash", "required_level": 4, "weight": 4, "category": "Operating Systems" },
+        { "skill": "Vulnerability Assessment", "required_level": 4, "weight": 5, "category": "SecOps" },
+        { "skill": "SIEM & Log Analysis", "required_level": 3, "weight": 4, "category": "Incident Response" },
+        { "skill": "Python", "required_level": 3, "weight": 3, "category": "Security Tooling" },
+        { "skill": "Cryptography", "required_level": 3, "weight": 3, "category": "Defense Fundamentals" }
+      ]
+    },
+    {
+      "id": "mobile-developer",
+      "title": "Mobile App Developer",
+      "description": "Engineers fluid, high-performance native and cross-platform mobile experiences for iOS and Android.",
+      "benchmark_skills": [
+        { "skill": "Flutter / Dart", "required_level": 4, "weight": 5, "category": "Cross-Platform" },
+        { "skill": "REST & GraphQL APIs", "required_level": 4, "weight": 4, "category": "Data Integration" },
+        { "skill": "Mobile UI/UX Design", "required_level": 4, "weight": 4, "category": "Human Interface" },
+        { "skill": "State Management", "required_level": 4, "weight": 4, "category": "Architecture" },
+        { "skill": "Git & CI/CD", "required_level": 3, "weight": 3, "category": "DevOps" },
+        { "skill": "Native APIs & SQLite", "required_level": 3, "weight": 3, "category": "Offline Storage" }
+      ]
+    }
+  ]
+}

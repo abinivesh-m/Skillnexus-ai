@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillNexus-AI — Autonomous Multi-Agent Career & Skill Orchestration Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,700;1,6..72,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- Top Pitch Teleprompter (For Flawless Presentation in Front of the Jury) -->
+  <div class="script-drawer" id="pitchDrawer">
+    <div>
+      <strong>🎤 90-Second Jury Script:</strong>
+      <span id="scriptStep">1. "Self-reported skills on resumes are unreliable. SkillNexus isolates Claimed vs Verified knowledge."</span>
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <button class="btn btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.72rem; color: #fff; background: #38332c; border: none;" onclick="nextPitchStep()">Next Cue</button>
+      <button class="btn btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.72rem; color: #aaa; background: transparent; border: none;" onclick="document.getElementById('pitchDrawer').style.display='none'">✕</button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <h1 class="brand-title">Skill<span>Nexus</span>.ai</h1>
+        <span class="brand-tag">Autonomous Multi-Agent Swarm</span>
+      </div>
+
+      <div class="header-actions">
+        <!-- 1-Click Exact Prompt Scenario Preset -->
+        <button class="btn btn-amber" id="btnPresetAarav" onclick="loadLearnerPreset('aarav-patel')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Prompt Scenario: Aarav Patel
+        </button>
+
+        <!-- Dynamic Goal Switch Trigger -->
+        <button class="btn btn-outline" id="btnSwitchGoalAI" onclick="quickSwitchGoal('ai-ml-engineer')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          1-Click Shift: AI Engineer
+        </button>
+
+        <button class="btn btn-primary" onclick="openAssessmentModal('JavaScript')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+          Take Check-in
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Live Multi-Agent Swarm Collaboration Bar -->
+  <section class="agent-bar">
+    <div class="agent-bar-inner">
+      <div class="agent-chips">
+        <div class="agent-chip active" id="chip-ProfileAgent"><span class="pulse-dot"></span> Profile Agent</div>
+        <div class="agent-chip" id="chip-GapAgent"><span class="pulse-dot"></span> Gap Agent</div>
+        <div class="agent-chip" id="chip-CurriculumAgent"><span class="pulse-dot"></span> Curriculum Agent</div>
+        <div class="agent-chip" id="chip-ResourceAgent"><span class="pulse-dot"></span> Resource Agent</div>
+        <div class="agent-chip" id="chip-AssessorAgent"><span class="pulse-dot"></span> Assessor Agent</div>
+        <div class="agent-chip" id="chip-MentorAgent"><span class="pulse-dot"></span> Mentor Agent</div>
+      </div>
+
+      <div class="agent-ticker" id="agentTicker">
+        <span style="color: var(--accent-amber);">⚡ Handoff:</span>
+        <span id="tickerMessage">Initializing multi-agent graph with deterministic Euclidean metrics...</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main 3-Column Workspace -->
+  <main class="main-layout">
+
+    <!-- Column 1: Learner Dossier & Credibility Matrix -->
+    <aside class="card-3d" id="colLearner">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Learner Profile</h2>
+          <span class="panel-subtitle">Audited Credentials & Self-Claims</span>
+        </div>
+        <span class="badge-level badge-claimed" id="auditSummaryBadge">Auditing...</span>
+      </div>
+
+      <div class="learner-picker">
+        <label class="section-label">Select Active Candidate</label>
+        <select class="select-control" id="learnerSelect" onchange="onLearnerChange(this.value)">
+          <option value="aarav-patel">Aarav Patel (Student - Targeting Full Stack)</option>
+          <option value="priya-sharma">Priya Sharma (Data Analyst - Targeting AI/ML)</option>
+          <option value="rohan-gupta">Rohan Gupta (Sysadmin - Targeting Cloud)</option>
+        </select>
+      </div>
+
+      <div class="learner-profile-header">
+        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Aarav" alt="Avatar" class="learner-avatar" id="learnerAvatar">
+        <div class="learner-meta">
+          <h3 id="learnerName">Aarav Patel</h3>
+          <p id="learnerHeadline">CS Undergraduate @ Rathinam Technical Campus</p>
+        </div>
+      </div>
+
+      <div>
+        <label class="section-label">Target Career Track</label>
+        <select class="select-control" id="roleSelect" onchange="onRoleChange(this.value)">
+          <!-- Populated dynamically via /api/roles -->
+        </select>
+      </div>
+
+      <div>
+        <span class="section-label">Claimed vs. Verified Skill Matrix</span>
+        <div class="skill-matrix-list" id="skillMatrixList">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- Column 2: Deterministic Gap Diagnostics -->
+    <section class="card-3d" id="colDiagnostics">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Readiness & Gap Delta</h2>
+          <span class="panel-subtitle">Strict Deterministic Formula · Zero Hallucination</span>
+        </div>
+        <span class="formula-tag">Σ(min(v, r)·w) / Σ(r·w) × 100</span>
+      </div>
+
+      <!-- Readiness Ring -->
+      <div class="readiness-ring-card">
+        <div class="ring-wrapper">
+          <svg width="140" height="140" class="ring-svg">
+            <circle cx="70" cy="70" r="54" stroke-width="10" fill="transparent" class="ring-bg"/>
+            <circle cx="70" cy="70" r="54" stroke-width="10" fill="transparent" class="ring-progress" id="readinessRing" stroke-dasharray="339.29" stroke-dashoffset="220"/>
+          </svg>
+          <div class="ring-text-center">
+            <div class="readiness-number" id="readinessScore">0%</div>
+            <div class="readiness-unit">Verified Fit</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-around; margin-top: 0.5rem; font-size: 0.8rem;">
+          <div>
+            <span style="color: var(--text-muted); display: block;">Self-Claimed</span>
+            <strong id="claimedScore">0%</strong>
+          </div>
+          <div style="border-left: 1px solid var(--border-subtle);"></div>
+          <div>
+            <span style="color: var(--text-muted); display: block;">Credibility Gap</span>
+            <strong style="color: var(--accent-rose);" id="credibilityDelta">-0%</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prioritized Skill Gap Stack -->
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
+          <span class="section-label" style="margin: 0;">Prioritized Skill Gaps</span>
+          <span style="font-size: 0.72rem; color: var(--text-muted);" id="gapCount">0 gaps</span>
+        </div>
+        <div class="gap-stack" id="gapStack">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Column 3: Adaptive Sequential Roadmap & Re-Plan Diff -->
+    <section class="card-3d" id="colRoadmap">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Adaptive Learning Roadmap</h2>
+          <span class="panel-subtitle">Prerequisite DAG Sequencing with Curated Resources</span>
+        </div>
+        <button class="btn btn-outline" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;" onclick="openAssessmentModal('JavaScript')">
+          ⚡ Trigger Adaptive Diff
+        </button>
+      </div>
+
+      <!-- Dynamic Adaptive Re-Plan Diff Banner (Shown upon failure or goal change) -->
+      <div class="adaptive-diff-banner" id="diffBanner" style="display: none;">
+        <div class="banner-icon">⚡</div>
+        <div class="banner-content">
+          <h4 id="diffTitle">Adaptive Intervention Triggered</h4>
+          <p id="diffNarrative">Curriculum rearranged in response to performance diagnostics.</p>
+        </div>
+      </div>
+
+      <!-- Roadmap Timeline Container -->
+      <div class="roadmap-timeline" id="roadmapTimeline">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Interactive Check-in Assessment Modal -->
+  <div class="modal-overlay" id="assessmentModal">
+    <div class="modal-box">
+      <div class="modal-top">
+        <div>
+          <h3 style="font-family: var(--font-serif); font-size: 1.25rem;">Skill Diagnostic Check-in: <span id="modalSkillName" style="color: var(--accent-amber);">JavaScript</span></h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Assessor Agent will grade answers and Mentor Agent will adapt roadmap if concepts are unmastered.</p>
+        </div>
+        <button class="btn btn-outline" style="border: none; font-size: 1.1rem;" onclick="closeAssessmentModal()">✕</button>
+      </div>
+
+      <div id="quizQuestionsContainer">
+        <!-- Dynamic Questions -->
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+        <button class="btn btn-outline" onclick="simulateFailedAssessment()" style="color: var(--accent-rose); border-color: var(--accent-rose-border);">
+          ⚠️ Simulate Weakness (Demo Re-plan)
+        </button>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-outline" onclick="closeAssessmentModal()">Cancel</button>
+          <button class="btn btn-amber" onclick="submitAssessmentAnswers()">Submit & Verify</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
