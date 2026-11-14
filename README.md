@@ -25,7 +25,7 @@ Readiness arithmetic remains explainable and deterministic. Gemini generates que
 | :--- | :--- | :---: |
 | **User Profile** | Maintains learner details, verified & claimed skills, certifications, and target career goals (`data/learners.json`, `ProfileAgent`). | **[100% Implemented]** |
 | **Skill Analysis** | Mathematical gap scoring ($R_i - L_{\text{verified}}$) separating claimed vs. verified capability (`domain.py`, `GapAgent`). | **[100% Implemented]** |
-| **Career Matching** | Weighted Euclidean matching against 6 benchmark industry roles (`data/role_requirements.json`, `/api/roles`). | **[100% Implemented]** |
+| **Career Matching** | Deterministic weighted benchmark matching against 6 industry roles (`data/role_requirements.json`, `/api/roles`). | **[100% Implemented]** |
 | **Learning Recommendations** | Dual-tier verified resources (1 free documentation + 1 deep production course) with prerequisite DAG sequencing (`CurriculumAgent`, `ResourceAgent`). | **[100% Implemented]** |
 | **Progress Tracking** | Telemetry tracking assessment mastery, time-to-hire reduction, and real-time readiness shifts (`app.js`, `/api/orchestrate`). | **[100% Implemented]** |
 | **AI Mentor** | Adaptive re-planning core injecting remedial sprints upon diagnostic struggle or goal change (`MentorAgent`, `ai.py`). | **[100% Implemented]** |
@@ -59,7 +59,7 @@ SkillNexus-AI is a multi-agent career-planning platform for identifying the diff
 
 ## System Interface Preview
 
-![SkillNexus Interactive Interface](docs/assets/dashboard_preview.svg)
+![SkillNexus current interactive interface showing the 3D competency graph, verified readiness, feature navigator, gaps, and adaptive roadmap](docs/assets/dashboard_preview.svg)
 
 ---
 
@@ -82,13 +82,13 @@ The arithmetic difference between these metrics constitutes the **Credibility De
 
 The system is architected across three decoupled tiers: an Ingestion & Ontology Layer, a Multi-Agent Swarm Engine, and a Reactive Presentation Layer.
 
-![SkillNexus System Architecture](docs/assets/architecture.svg)
+![SkillNexus system architecture: evidence ingestion, six-agent orchestration, deterministic scoring, AI language layer, and adaptive presentation](docs/assets/architecture.svg)
 
 ### Multi-Agent Lifecycle & Dynamic Feedback Loop
 
 The platform employs a reactive event bus where specialized agents collaborate sequentially during baseline profiling, and cyclically during adaptive re-planning:
 
-![Multi-Agent Lifecycle](docs/assets/agent_lifecycle.svg)
+![SkillNexus six-agent lifecycle and adaptive feedback loop](docs/assets/agent_lifecycle.svg)
 
 ```mermaid
 sequenceDiagram
